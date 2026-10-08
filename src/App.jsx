@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Plus,
   Minus,
@@ -16,11 +16,24 @@ import {
   RotateCcw,
   LayoutGrid,
   Percent,
-  LogOut
+  LogOut,
+  Users,
+  UserPlus,
+  Truck,
+  FileText,
+  Globe,
+  MapPin,
+  Phone
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from './data/initialProducts'
 import Login from './Login'
 import authService from './services/authService'
+import clienteService from './services/clienteService'
+import ventaService from './services/ventaService'
+import ClienteModal from './components/ClienteModal'
+import FacturaModal from './components/FacturaModal'
+import HistorialFacturas from './components/HistorialFacturas'
+import DirectorioClientes from './components/DirectorioClientes'
 import './App.css'
 
 export default function App() {
@@ -34,23 +47,41 @@ export default function App() {
     }
   })
 
+  // Vista activa de la aplicación: 'pos' (Punto de venta) | 'historial' (Facturas & Pedidos) | 'clientes' (Directorio)
+  const [activeView, setActiveView] = useState('pos')
+
   // Estado de productos en catálogo (persiste cambios locales)
   const [products, setProducts] = useState(INITIAL_PRODUCTS)
 
   // Estado del Carrito / Orden actual
   const [cart, setCart] = useState([])
 
-  // Filtros y Búsqueda
+  // Clientes y selección de cliente para la orden
+  const [clientes, setClientes] = useState([])
+  const [selectedCliente, setSelectedCliente] = useState(null)
+  const [isClienteModalOpen, setIsClienteModalOpen] = useState(false)
+
+  // Modalidad de Consumo / Pedido:
+  // 'LOCAL' (Consumo en Restaurante / Comedor) | 'EN_LINEA' (Pedido en Línea / Delivery) | 'LLEVAR' (Para Llevar)
+  const [orderType, setOrderType] = useState('LOCAL')
+  const [tableNumber, setTableNumber] = useState('Mesa 1')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [orderNotes, setOrderNotes] = useState('')
+
+  // Historial de Ventas / Facturas
+  const [ventas, setVentas] = useState([])
+  const [isFacturaModalOpen, setIsFacturaModalOpen] = useState(false)
+  const [activeFactura, setActiveFactura] = useState(null)
+
+  // Filtros y Búsqueda de Productos
   const [activeCategory, setActiveCategory] = useState('all') // 'all' | 'comida' | 'bebida'
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Método de pago: 'cash' | 'card' | 'transfer'
+  // Método de pago: 'cash' | 'card' | 'transfer' | 'online'
   const [paymentMethod, setPaymentMethod] = useState('cash')
 
-  // Modales
+  // Modales adicionales
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
-  const [lastReceipt, setLastReceipt] = useState(null)
 
   // Notificación Toast
   const [toast, setToast] = useState(null)
@@ -71,6 +102,61 @@ export default function App() {
     setTimeout(() => {
       setToast(null)
     }, 2800)
+  }
+
+  // Carga inicial de Clientes y Ventas desde backend o cache local
+  useEffect(() => {
+    async function loadInitialData() {
+      try {
+        const clientList = await clienteService.getClientes()
+        setClientes(clientList)
+        if (clientList.length > 0 && !selectedCliente) {
+          // Asigna por defecto al cliente consumidor final o primer cliente
+          const consumidorFinal = clientList.find(c => c.nombre === 'Consumidor') || clientList[0]
+          setSelectedCliente(consumidorFinal)
+          if (consumidorFinal?.direccion && consumidorFinal.nombre !== 'Consumidor') {
+            setDeliveryAddress(consumidorFinal.direccion)
+          }
+        }
+      } catch (err) {
+        console.warn('Error cargando clientes:', err)
+      }
+
+      try {
+        const salesList = await ventaService.getVentas()
+        setVentas(salesList)
+      } catch (err) {
+        console.warn('Error cargando ventas:', err)
+      }
+    }
+
+    if (currentUser) {
+      loadInitialData()
+    }
+  }, [currentUser])
+
+  // Al cambiar de cliente seleccionado, auto-rellenar la dirección de entrega
+  const handleSelectCliente = (cliente) => {
+    setSelectedCliente(cliente)
+    if (cliente?.direccion && cliente.nombre !== 'Consumidor') {
+      setDeliveryAddress(cliente.direccion)
+    }
+    showToast(`Cliente asignado: ${cliente.nombre} ${cliente.apellido || ''}`, 'success')
+  }
+
+  // Registrar nuevo cliente desde el modal
+  const handleCrearCliente = async (clienteData) => {
+    const nuevo = await clienteService.createCliente(clienteData)
+    setClientes((prev) => [nuevo, ...prev])
+    showToast(`Cliente "${nuevo.nombre}" registrado con éxito`, 'success')
+    return nuevo
+  }
+
+  // Iniciar toma de pedido para un cliente específico desde el Directorio
+  const handleIniciarPedidoConCliente = (cliente) => {
+    handleSelectCliente(cliente)
+    setActiveView('pos')
+    showToast(`Listo para tomar la orden de ${cliente.nombre}`, 'success')
   }
 
   // Inicio y Cierre de Sesión
@@ -96,7 +182,6 @@ export default function App() {
   }
 
   // --- ACCIONES DE CARRITO ---
-  // AGREGAR AL CARRITO (Icono Plus)
   const addToCart = (product) => {
     setCart((prevCart) => {
       const existing = prevCart.find((item) => item.id === product.id)
@@ -111,7 +196,6 @@ export default function App() {
     showToast(`"${product.name}" agregado a la orden`, 'success')
   }
 
-  // DISMINUIR CANTIDAD (Icono Minus)
   const decreaseQuantity = (productId) => {
     setCart((prevCart) => {
       return prevCart
@@ -125,13 +209,11 @@ export default function App() {
     })
   }
 
-  // ELIMINAR ÍTEM DEL CARRITO (Icono Trash2)
   const removeFromCart = (productId, productName) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId))
     showToast(`"${productName}" eliminado de la orden`, 'danger')
   }
 
-  // VACIAR TODO EL CARRITO (Icono Trash2)
   const clearCart = () => {
     if (cart.length === 0) return
     if (window.confirm('¿Deseas vaciar todo el pedido actual?')) {
@@ -141,17 +223,14 @@ export default function App() {
   }
 
   // --- ACCIONES DE CATÁLOGO ---
-  // ELIMINAR PRODUCTO DEL MENÚ (Icono Trash2)
   const deleteProductFromMenu = (productId, productName) => {
     if (window.confirm(`¿Seguro que deseas eliminar "${productName}" del menú?`)) {
       setProducts((prev) => prev.filter((p) => p.id !== productId))
-      // Si está en el carrito, también removerlo
       setCart((prev) => prev.filter((p) => p.id !== productId))
       showToast(`"${productName}" fue eliminado del catálogo`, 'danger')
     }
   }
 
-  // RESTAURAR PRODUCTOS POR DEFECTO
   const restoreDefaultProducts = () => {
     if (window.confirm('¿Restablecer el menú inicial con comidas y bebidas?')) {
       setProducts(INITIAL_PRODUCTS)
@@ -159,7 +238,6 @@ export default function App() {
     }
   }
 
-  // AGREGAR NUEVO PRODUCTO AL CATÁLOGO
   const handleCreateProduct = (e) => {
     e.preventDefault()
     if (!newProduct.name || !newProduct.price) {
@@ -209,47 +287,112 @@ export default function App() {
     })
   }, [products, activeCategory, searchQuery])
 
-  // Conteos
   const totalFoods = products.filter((p) => p.category === 'comida').length
   const totalDrinks = products.filter((p) => p.category === 'bebida').length
 
   // --- CÁLCULOS FINANCIEROS DEL CARRITO ---
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
   const totalItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0)
-  const tax = subtotal * 0.16 // 16% IVA
-  const grandTotal = subtotal + tax
+  const tax = Number((subtotal * 0.16).toFixed(2)) // 16% IVA
+  const grandTotal = Number((subtotal + tax).toFixed(2))
 
-  // COBRAR Y GENERAR TICKET
-  const handleCheckout = () => {
+  // =========================================================
+  // COBRAR Y GENERAR FACTURA FISCAL / COMPROBANTE OFICIAL
+  // =========================================================
+  const handleCheckout = async () => {
     if (cart.length === 0) return
-    const receiptData = {
-      folio: 'FOL-' + Math.floor(100000 + Math.random() * 900000),
-      date: new Date().toLocaleDateString('es-MX', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      }),
-      time: new Date().toLocaleTimeString('es-MX', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }),
-      items: [...cart],
-      subtotal,
-      tax,
-      total: grandTotal,
-      cajero: currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : 'Cajero en Turno',
-      paymentMethod:
+
+    const clienteAsignado = selectedCliente || {
+      nombre: 'Consumidor',
+      apellido: 'Final',
+      documento: 'XAXX010101000',
+      telefono: '555-000-0000',
+      email: 'ventas@nocturnagrill.com',
+      direccion: 'Consumo en barra / mostrador'
+    }
+
+    const payloadVenta = {
+      tipoPedido: orderType,
+      numeroMesa: orderType === 'LOCAL' ? tableNumber : '',
+      direccionEntrega: orderType === 'EN_LINEA' ? (deliveryAddress || clienteAsignado.direccion || '') : '',
+      metodoPago:
         paymentMethod === 'cash'
           ? 'Efectivo 💵'
           : paymentMethod === 'card'
           ? 'Tarjeta 💳'
-          : 'Transferencia 📱'
+          : paymentMethod === 'online'
+          ? 'Pago en Línea 🌐'
+          : 'Transferencia 📱',
+      notas: orderNotes.trim(),
+      subtotal,
+      iva: tax,
+      total: grandTotal,
+      estado: 'FACTURADO',
+      cliente: clienteAsignado.id ? { id: clienteAsignado.id } : clienteAsignado,
+      detalles: cart.map(it => ({
+        cantidad: it.quantity,
+        precioUnitario: it.price,
+        subtotal: it.price * it.quantity,
+        nombreProducto: it.name
+      }))
     }
-    setLastReceipt(receiptData)
-    setIsReceiptModalOpen(true)
-    setCart([])
+
+    try {
+      // Guardar en backend (o sincronizar localmente)
+      const ventaRegistrada = await ventaService.createVenta(payloadVenta)
+
+      // Completar objeto para el modal de Factura con datos de presentación
+      const facturaData = {
+        ...ventaRegistrada,
+        folio: ventaRegistrada.numeroFactura || `FAC-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
+        numeroFactura: ventaRegistrada.numeroFactura,
+        date: new Date().toLocaleDateString('es-MX', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }),
+        time: new Date().toLocaleTimeString('es-MX', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }),
+        items: [...cart],
+        detalles: ventaRegistrada.detalles || [...cart],
+        subtotal,
+        tax,
+        iva: tax,
+        total: grandTotal,
+        cliente: clienteAsignado,
+        cajero: currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : 'Cajero en Turno',
+        paymentMethod: payloadVenta.metodoPago,
+        metodoPago: payloadVenta.metodoPago,
+        tipoPedido: orderType,
+        numeroMesa: orderType === 'LOCAL' ? tableNumber : '',
+        direccionEntrega: payloadVenta.direccionEntrega,
+        notas: payloadVenta.notas
+      }
+
+      setActiveFactura(facturaData)
+      setIsFacturaModalOpen(true)
+
+      // Actualizar listado de ventas en memoria
+      setVentas(prev => [facturaData, ...prev])
+
+      // Vaciar carrito y resetear notas para la siguiente orden
+      setCart([])
+      setOrderNotes('')
+
+      showToast('¡Orden cobrada y Factura generada con éxito!', 'success')
+    } catch (err) {
+      alert('Error al generar la venta y factura: ' + err.message)
+    }
+  }
+
+  // Abrir factura desde el historial
+  const handleVerFactura = (venta) => {
+    setActiveFactura(venta)
+    setIsFacturaModalOpen(true)
   }
 
   // SI NO HAY SESIÓN INICIADA, MOSTRAR LA PANTALLA DE LOGIN
@@ -259,10 +402,11 @@ export default function App() {
 
   return (
     <div className="pos-container">
-      {/* HEADER SUPERIOR */}
+      {/* HEADER SUPERIOR CON NAVEGACIÓN */}
       <header className="pos-header">
         <div className="header-inner">
-          <div className="brand-wrapper">
+          {/* LOGOTIPO */}
+          <div className="brand-wrapper" onClick={() => setActiveView('pos')} style={{ cursor: 'pointer' }}>
             <div className="brand-icon-box">
               <Sparkles size={26} />
             </div>
@@ -274,6 +418,41 @@ export default function App() {
             </div>
           </div>
 
+          {/* PESTAÑAS DE NAVEGACIÓN: POS / HISTORIAL DE FACTURAS / CLIENTES */}
+          <nav className="header-nav">
+            <button
+              type="button"
+              className={`nav-tab-btn ${activeView === 'pos' ? 'active' : ''}`}
+              onClick={() => setActiveView('pos')}
+            >
+              <LayoutGrid size={16} />
+              <span>Tomar Pedido</span>
+            </button>
+
+            <button
+              type="button"
+              className={`nav-tab-btn ${activeView === 'historial' ? 'active' : ''}`}
+              onClick={() => setActiveView('historial')}
+            >
+              <FileText size={16} />
+              <span>Facturas & Pedidos</span>
+              {ventas.length > 0 && (
+                <span className="nav-badge-count">{ventas.length}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`nav-tab-btn ${activeView === 'clientes' ? 'active' : ''}`}
+              onClick={() => setActiveView('clientes')}
+            >
+              <Users size={16} />
+              <span>Clientes</span>
+              <span className="nav-badge-count">{clientes.length}</span>
+            </button>
+          </nav>
+
+          {/* ACCIONES DEL HEADER Y PERFIL */}
           <div className="header-actions">
             {/* Perfil del Usuario Activo */}
             <div className="user-profile-badge">
@@ -292,366 +471,552 @@ export default function App() {
               </button>
             </div>
 
-            {/* Botón para restaurar catálogo si se eliminaron muchos */}
-            <button
-              onClick={restoreDefaultProducts}
-              className="tab-btn"
-              title="Restaurar comidas y bebidas originales"
-            >
-              <RotateCcw size={15} /> Restaurar Catálogo
-            </button>
+            {/* Botón para restaurar catálogo */}
+            {activeView === 'pos' && (
+              <button
+                onClick={restoreDefaultProducts}
+                className="tab-btn"
+                title="Restaurar comidas y bebidas originales"
+              >
+                <RotateCcw size={15} /> Restaurar Catálogo
+              </button>
+            )}
 
-            {/* BOTÓN CON ICONO DE AGREGAR PRODUCTO */}
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="btn-add-product"
-            >
-              <Plus size={18} strokeWidth={2.5} />
-              <span>Nuevo Producto</span>
-            </button>
+            {/* BOTÓN PARA AGREGAR NUEVO PLATILLO O BEBIDA */}
+            {activeView === 'pos' && (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="btn-add-product"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                <span>Nuevo Producto</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* CUERPO PRINCIPAL DEL PUNTO DE VENTA */}
-      <main className="pos-layout">
-        {/* SECCIÓN IZQUIERDA: CATÁLOGO DE COMIDA Y BEBIDA */}
-        <section className="catalog-section">
-          {/* CONTROLES: BUSCADOR Y PESTAÑAS COMIDA / BEBIDA */}
-          <div className="controls-card">
-            <div className="search-box">
-              <Search className="search-icon" size={20} />
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Buscar por comida (hamburguesas, tacos, pizza...) o bebida (mojito, malteada, cerveza...)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'transparent',
-                    color: '#a855f7'
-                  }}
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-
-            <div className="filters-row">
-              <div className="category-tabs">
-                <button
-                  className={`tab-btn ${activeCategory === 'all' ? 'active' : ''}`}
-                  onClick={() => setActiveCategory('all')}
-                >
-                  <LayoutGrid size={16} />
-                  <span>Todos los Productos</span>
-                  <span className="tab-count">{products.length}</span>
-                </button>
-
-                {/* FILTRO COMIDA */}
-                <button
-                  className={`tab-btn ${activeCategory === 'comida' ? 'active' : ''}`}
-                  onClick={() => setActiveCategory('comida')}
-                >
-                  <Utensils size={16} />
-                  <span>Comidas</span>
-                  <span className="tab-count">{totalFoods}</span>
-                </button>
-
-                {/* FILTRO BEBIDA */}
-                <button
-                  className={`tab-btn ${activeCategory === 'bebida' ? 'active' : ''}`}
-                  onClick={() => setActiveCategory('bebida')}
-                >
-                  <CupSoda size={16} />
-                  <span>Bebidas</span>
-                  <span className="tab-count">{totalDrinks}</span>
-                </button>
-              </div>
-
-              <div className="results-info">
-                Mostrando {filteredProducts.length} producto(s)
-              </div>
-            </div>
-          </div>
-
-          {/* GRID DE PRODUCTOS */}
-          {filteredProducts.length === 0 ? (
-            <div className="empty-catalog">
-              <Utensils className="empty-catalog-icon" />
-              <h3>No se encontraron productos</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                No hay comidas ni bebidas que coincidan con la búsqueda "{searchQuery}".
-              </p>
-              <button
-                className="btn-add-product"
-                onClick={() => {
-                  setSearchQuery('')
-                  setActiveCategory('all')
-                }}
-              >
-                Limpiar búsqueda
-              </button>
-            </div>
-          ) : (
-            <div className="products-grid">
-              {filteredProducts.map((item) => {
-                const isFood = item.category === 'comida'
-                const inCart = cart.find((c) => c.id === item.id)
-
-                return (
-                  <div key={item.id} className="product-card">
-                    {/* Imagen y Badges */}
-                    <div className="product-img-wrapper">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="product-img"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.target.src = isFood
-                            ? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'
-                            : 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80'
-                        }}
-                      />
-
-                      {/* Badge de Categoría Comida o Bebida */}
-                      <span
-                        className={`product-badge-category ${
-                          isFood ? 'badge-food' : 'badge-drink'
-                        }`}
-                      >
-                        {isFood ? (
-                          <>
-                            <Utensils size={12} /> Comida
-                          </>
-                        ) : (
-                          <>
-                            <CupSoda size={12} /> Bebida
-                          </>
-                        )}
-                      </span>
-
-                      {item.tag && (
-                        <span className="product-badge-tag">{item.tag}</span>
-                      )}
-
-                      {/* ICONO DE ELIMINAR DEL CATÁLOGO */}
-                      <button
-                        className="btn-delete-menu-item"
-                        title="Eliminar este platillo/bebida del menú"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          deleteProductFromMenu(item.id, item.name)
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-
-                    {/* Información del Producto */}
-                    <div className="product-info">
-                      <h3 className="product-name">{item.name}</h3>
-                      <p className="product-desc">{item.description}</p>
-
-                      <div className="product-bottom">
-                        <div className="product-price">
-                          <small>$</small>
-                          {item.price.toFixed(2)}
-                        </div>
-
-                        {/* BOTÓN CON ICONO DE AGREGAR */}
-                        <button
-                          className="btn-add-to-cart"
-                          onClick={() => addToCart(item)}
-                          title="Agregar al ticket"
-                        >
-                          <Plus size={16} strokeWidth={2.8} />
-                          <span>
-                            {inCart ? `Agregar (${inCart.quantity})` : 'Agregar'}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* SECCIÓN DERECHA: TICKET DE VENTA / CARRITO */}
-        <aside className="order-sidebar">
-          {/* Header del Ticket */}
-          <div className="order-header">
-            <div className="order-header-top">
-              <div className="order-title-box">
-                <Receipt className="text-purple-400" size={22} color="#c084fc" />
-                <h2 className="order-title">Ticket de Venta</h2>
-                {totalItemsCount > 0 && (
-                  <span className="cart-count-badge">{totalItemsCount}</span>
+      {/* ========================================================= */}
+      {/* VISTA 1: PUNTO DE VENTA / CATÁLOGO + TICKET DE ORDEN      */}
+      {/* ========================================================= */}
+      {activeView === 'pos' && (
+        <main className="pos-layout">
+          {/* SECCIÓN IZQUIERDA: CATÁLOGO DE COMIDA Y BEBIDA */}
+          <section className="catalog-section">
+            {/* CONTROLES: BUSCADOR Y PESTAÑAS COMIDA / BEBIDA */}
+            <div className="controls-card">
+              <div className="search-box">
+                <Search className="search-icon" size={20} />
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Buscar por comida (hamburguesas, tacos, pizza...) o bebida (mojito, malteada, cerveza...)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      color: '#a855f7'
+                    }}
+                  >
+                    <X size={18} />
+                  </button>
                 )}
               </div>
 
-              {cart.length > 0 && (
-                <div className="order-header-actions">
-                  {/* BOTÓN CON ICONO DE ELIMINAR / VACIAR CARRITO */}
+              <div className="filters-row">
+                <div className="category-tabs">
                   <button
-                    onClick={clearCart}
-                    className="btn-clear-cart"
-                    title="Vaciar toda la orden"
+                    className={`tab-btn ${activeCategory === 'all' ? 'active' : ''}`}
+                    onClick={() => setActiveCategory('all')}
                   >
-                    <Trash2 size={14} />
-                    <span>Vaciar</span>
+                    <LayoutGrid size={16} />
+                    <span>Todos los Productos</span>
+                    <span className="tab-count">{products.length}</span>
+                  </button>
+
+                  <button
+                    className={`tab-btn ${activeCategory === 'comida' ? 'active' : ''}`}
+                    onClick={() => setActiveCategory('comida')}
+                  >
+                    <Utensils size={16} />
+                    <span>Comidas</span>
+                    <span className="tab-count">{totalFoods}</span>
+                  </button>
+
+                  <button
+                    className={`tab-btn ${activeCategory === 'bebida' ? 'active' : ''}`}
+                    onClick={() => setActiveCategory('bebida')}
+                  >
+                    <CupSoda size={16} />
+                    <span>Bebidas</span>
+                    <span className="tab-count">{totalDrinks}</span>
                   </button>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Lista de Productos Agregados */}
-          {cart.length === 0 ? (
-            <div className="empty-cart-state">
-              <ShoppingBag className="empty-cart-icon" />
-              <h4 style={{ color: '#fff' }}>Orden Vacía</h4>
-              <p style={{ fontSize: '0.82rem' }}>
-                Selecciona comidas o bebidas del menú pulsando el botón{' '}
-                <strong style={{ color: '#a855f7' }}>+ Agregar</strong>.
-              </p>
-            </div>
-          ) : (
-            <div className="order-items-list">
-              {cart.map((item) => (
-                <div key={item.id} className="cart-item-row">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="cart-item-thumb"
-                  />
-
-                  <div className="cart-item-details">
-                    <div className="cart-item-name" title={item.name}>
-                      {item.name}
-                    </div>
-                    <div className="cart-item-price-unit">
-                      ${item.price.toFixed(2)} c/u
-                    </div>
-                  </div>
-
-                  {/* CONTROLES DE CANTIDAD: AGREGAR (+) Y REDUCIR (-) */}
-                  <div className="cart-qty-controls">
-                    <button
-                      className="btn-qty"
-                      onClick={() => decreaseQuantity(item.id)}
-                      title="Disminuir cantidad"
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <span className="cart-qty-number">{item.quantity}</span>
-                    <button
-                      className="btn-qty"
-                      onClick={() => addToCart(item)}
-                      title="Agregar una unidad más"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-
-                  <div className="cart-item-subtotal">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </div>
-
-                  {/* BOTÓN CON ICONO DE ELIMINAR ESTE PRODUCTO */}
-                  <button
-                    className="btn-remove-item"
-                    onClick={() => removeFromCart(item.id, item.name)}
-                    title="Eliminar de la orden"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <div className="results-info">
+                  Mostrando {filteredProducts.length} producto(s)
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Totales y Cobro */}
-          <div className="order-footer">
-            <div className="summary-line">
-              <span>Subtotal ({totalItemsCount} arts.)</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="summary-line">
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Percent size={13} /> IVA (16%)
-              </span>
-              <span>${tax.toFixed(2)}</span>
-            </div>
-            <div className="summary-total">
-              <span>TOTAL</span>
-              <span className="total-amount">${grandTotal.toFixed(2)}</span>
+              </div>
             </div>
 
-            {/* Selector de Método de Pago */}
-            <div style={{ marginTop: '0.2rem' }}>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-                Forma de Pago:
-              </p>
-              <div className="payment-selector">
+            {/* GRID DE PRODUCTOS */}
+            {filteredProducts.length === 0 ? (
+              <div className="empty-catalog">
+                <Utensils className="empty-catalog-icon" />
+                <h3>No se encontraron productos</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  No hay comidas ni bebidas que coincidan con la búsqueda "{searchQuery}".
+                </p>
                 <button
-                  type="button"
-                  className={`btn-payment-method ${
-                    paymentMethod === 'cash' ? 'active' : ''
-                  }`}
-                  onClick={() => setPaymentMethod('cash')}
+                  className="btn-add-product"
+                  onClick={() => {
+                    setSearchQuery('')
+                    setActiveCategory('all')
+                  }}
                 >
-                  <Banknote size={16} />
-                  <span>Efectivo</span>
+                  Limpiar búsqueda
                 </button>
+              </div>
+            ) : (
+              <div className="products-grid">
+                {filteredProducts.map((item) => {
+                  const isFood = item.category === 'comida'
+                  const inCart = cart.find((c) => c.id === item.id)
+
+                  return (
+                    <div key={item.id} className="product-card">
+                      {/* Imagen y Badges */}
+                      <div className="product-img-wrapper">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="product-img"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.src = isFood
+                              ? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'
+                              : 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80'
+                          }}
+                        />
+
+                        {/* Badge de Categoría Comida o Bebida */}
+                        <span
+                          className={`product-badge-category ${
+                            isFood ? 'badge-food' : 'badge-drink'
+                          }`}
+                        >
+                          {isFood ? (
+                            <>
+                              <Utensils size={12} /> Comida
+                            </>
+                          ) : (
+                            <>
+                              <CupSoda size={12} /> Bebida
+                            </>
+                          )}
+                        </span>
+
+                        {item.tag && (
+                          <span className="product-badge-tag">{item.tag}</span>
+                        )}
+
+                        {/* Eliminar del menú */}
+                        <button
+                          className="btn-delete-menu-item"
+                          title="Eliminar este platillo/bebida del menú"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            deleteProductFromMenu(item.id, item.name)
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      {/* Información del Producto */}
+                      <div className="product-info">
+                        <h3 className="product-name">{item.name}</h3>
+                        <p className="product-desc">{item.description}</p>
+
+                        <div className="product-bottom">
+                          <div className="product-price">
+                            <small>$</small>
+                            {item.price.toFixed(2)}
+                          </div>
+
+                          <button
+                            className="btn-add-to-cart"
+                            onClick={() => addToCart(item)}
+                            title="Agregar al ticket de la orden"
+                          >
+                            <Plus size={16} strokeWidth={2.8} />
+                            <span>
+                              {inCart ? `Agregar (${inCart.quantity})` : 'Agregar'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* SECCIÓN DERECHA: TICKET DE VENTA CON CLIENTE Y FACTURACIÓN */}
+          <aside className="order-sidebar">
+            {/* Header del Ticket */}
+            <div className="order-header">
+              <div className="order-header-top">
+                <div className="order-title-box">
+                  <Receipt size={22} color="#c084fc" />
+                  <h2 className="order-title">Ticket & Factura</h2>
+                  {totalItemsCount > 0 && (
+                    <span className="cart-count-badge">{totalItemsCount}</span>
+                  )}
+                </div>
+
+                {cart.length > 0 && (
+                  <div className="order-header-actions">
+                    <button
+                      onClick={clearCart}
+                      className="btn-clear-cart"
+                      title="Vaciar toda la orden"
+                    >
+                      <Trash2 size={14} />
+                      <span>Vaciar</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* SELECTOR DE MODALIDAD: CONSUMO EN MESA vs PEDIDO EN LÍNEA vs LLEVAR */}
+            <div className="order-modality-block">
+              <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>
+                Modalidad del Pedido:
+              </label>
+              <div className="modality-selector">
                 <button
                   type="button"
-                  className={`btn-payment-method ${
-                    paymentMethod === 'card' ? 'active' : ''
-                  }`}
-                  onClick={() => setPaymentMethod('card')}
+                  className={`btn-modality ${orderType === 'LOCAL' ? 'active' : ''}`}
+                  onClick={() => setOrderType('LOCAL')}
+                  title="Consumo en el restaurante / comedor (lo que han comido)"
                 >
-                  <CreditCard size={16} />
-                  <span>Tarjeta</span>
+                  <Utensils size={15} />
+                  <span>En Restaurante</span>
                 </button>
+
                 <button
                   type="button"
-                  className={`btn-payment-method ${
-                    paymentMethod === 'transfer' ? 'active' : ''
-                  }`}
-                  onClick={() => setPaymentMethod('transfer')}
+                  className={`btn-modality ${orderType === 'EN_LINEA' ? 'active' : ''}`}
+                  onClick={() => setOrderType('EN_LINEA')}
+                  title="Pedido en línea / Envío a domicilio"
                 >
-                  <CheckCircle2 size={16} />
-                  <span>Transf.</span>
+                  <Truck size={15} />
+                  <span>Pedido en Línea</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`btn-modality ${orderType === 'LLEVAR' ? 'active' : ''}`}
+                  onClick={() => setOrderType('LLEVAR')}
+                  title="Para llevar / recoger en mostrador"
+                >
+                  <ShoppingBag size={15} />
+                  <span>Para Llevar</span>
                 </button>
               </div>
             </div>
 
-            {/* Botón de Finalizar y Cobrar */}
-            <button
-              className="btn-checkout"
-              disabled={cart.length === 0}
-              onClick={handleCheckout}
-            >
-              <Receipt size={18} />
-              <span>COBRAR ORDEN (${grandTotal.toFixed(2)})</span>
-            </button>
-          </div>
-        </aside>
-      </main>
+            {/* SELECCIÓN Y GESTIÓN DEL CLIENTE */}
+            <div className="order-client-card">
+              <div className="order-client-header">
+                <div className="client-identity-box">
+                  <div className="client-avatar-round">
+                    {(selectedCliente?.nombre?.[0] || 'C').toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="client-name-bold">
+                      {selectedCliente ? `${selectedCliente.nombre} ${selectedCliente.apellido || ''}` : 'Consumidor Final'}
+                    </div>
+                    <div className="client-rfc-sub">
+                      {selectedCliente?.documento ? `RFC: ${selectedCliente.documento}` : 'Sin RFC asignado'}
+                    </div>
+                  </div>
+                </div>
 
-      {/* MODAL: AGREGAR NUEVO PLATILLO O BEBIDA */}
+                <div className="order-client-actions">
+                  <button
+                    type="button"
+                    className="btn-client-tag"
+                    onClick={() => setIsClienteModalOpen(true)}
+                    title="Seleccionar o registrar un nuevo cliente"
+                  >
+                    <UserPlus size={13} />
+                    <span>{selectedCliente ? 'Cambiar' : 'Asignar'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* CAMPOS ESPECÍFICOS SEGÚN MODALIDAD */}
+            <div className="order-subfields">
+              {orderType === 'LOCAL' && (
+                <div>
+                  <input
+                    type="text"
+                    className="subfield-input"
+                    placeholder="Mesa / Zona (Ej: Mesa 4, Terraza 2, Barra)"
+                    value={tableNumber}
+                    onChange={(e) => setTableNumber(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {orderType === 'EN_LINEA' && (
+                <>
+                  <div>
+                    <input
+                      type="text"
+                      className="subfield-input"
+                      placeholder="Dirección de entrega a domicilio *"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      className="subfield-input"
+                      placeholder="Instrucciones de entrega (Apto, timbre, referencias)..."
+                      value={orderNotes}
+                      onChange={(e) => setOrderNotes(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {orderType === 'LLEVAR' && (
+                <div>
+                  <input
+                    type="text"
+                    className="subfield-input"
+                    placeholder="Notas para el pedido (Ej: Extra servilletas)..."
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Lista de Productos Agregados */}
+            {cart.length === 0 ? (
+              <div className="empty-cart-state">
+                <ShoppingBag className="empty-cart-icon" />
+                <h4 style={{ color: '#fff' }}>Orden Vacía</h4>
+                <p style={{ fontSize: '0.82rem' }}>
+                  Selecciona comidas o bebidas del menú pulsando el botón{' '}
+                  <strong style={{ color: '#a855f7' }}>+ Agregar</strong>.
+                </p>
+              </div>
+            ) : (
+              <div className="order-items-list">
+                {cart.map((item) => (
+                  <div key={item.id} className="cart-item-row">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="cart-item-thumb"
+                    />
+
+                    <div className="cart-item-details">
+                      <div className="cart-item-name" title={item.name}>
+                        {item.name}
+                      </div>
+                      <div className="cart-item-price-unit">
+                        ${item.price.toFixed(2)} c/u
+                      </div>
+                    </div>
+
+                    <div className="cart-qty-controls">
+                      <button
+                        className="btn-qty"
+                        onClick={() => decreaseQuantity(item.id)}
+                        title="Disminuir cantidad"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="cart-qty-number">{item.quantity}</span>
+                      <button
+                        className="btn-qty"
+                        onClick={() => addToCart(item)}
+                        title="Agregar una unidad más"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+
+                    <div className="cart-item-subtotal">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </div>
+
+                    <button
+                      className="btn-remove-item"
+                      onClick={() => removeFromCart(item.id, item.name)}
+                      title="Eliminar de la orden"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Totales y Cobro con Factura */}
+            <div className="order-footer">
+              <div className="summary-line">
+                <span>Subtotal ({totalItemsCount} arts.)</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="summary-line">
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Percent size={13} /> IVA (16% Fiscal)
+                </span>
+                <span>${tax.toFixed(2)}</span>
+              </div>
+              <div className="summary-total">
+                <span>TOTAL A FACTURAR</span>
+                <span className="total-amount">${grandTotal.toFixed(2)}</span>
+              </div>
+
+              {/* Selector de Método de Pago */}
+              <div style={{ marginTop: '0.2rem' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                  Forma de Pago:
+                </p>
+                <div className="payment-selector">
+                  <button
+                    type="button"
+                    className={`btn-payment-method ${
+                      paymentMethod === 'cash' ? 'active' : ''
+                    }`}
+                    onClick={() => setPaymentMethod('cash')}
+                  >
+                    <Banknote size={16} />
+                    <span>Efectivo</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn-payment-method ${
+                      paymentMethod === 'card' ? 'active' : ''
+                    }`}
+                    onClick={() => setPaymentMethod('card')}
+                  >
+                    <CreditCard size={16} />
+                    <span>Tarjeta</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn-payment-method ${
+                      paymentMethod === 'transfer' ? 'active' : ''
+                    }`}
+                    onClick={() => setPaymentMethod('transfer')}
+                  >
+                    <CheckCircle2 size={16} />
+                    <span>Transf.</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn-payment-method ${
+                      paymentMethod === 'online' ? 'active' : ''
+                    }`}
+                    onClick={() => setPaymentMethod('online')}
+                  >
+                    <Globe size={16} />
+                    <span>En Línea</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Botón de Finalizar, Cobrar y Generar Factura */}
+              <button
+                className="btn-checkout"
+                disabled={cart.length === 0}
+                onClick={handleCheckout}
+                title="Cobrar la orden y generar factura fiscal oficial"
+              >
+                <Receipt size={18} />
+                <span>COBRAR Y GENERAR FACTURA (${grandTotal.toFixed(2)})</span>
+              </button>
+            </div>
+          </aside>
+        </main>
+      )}
+
+      {/* ========================================================= */}
+      {/* VISTA 2: HISTORIAL DE VENTAS, FACTURAS Y PEDIDOS EN LÍNEA  */}
+      {/* ========================================================= */}
+      {activeView === 'historial' && (
+        <HistorialFacturas
+          ventas={ventas}
+          onVerFactura={handleVerFactura}
+          onRecargar={async () => {
+            const res = await ventaService.getVentas()
+            setVentas(res)
+            showToast('Listado de facturas actualizado', 'success')
+          }}
+          onIrAlPOS={() => setActiveView('pos')}
+        />
+      )}
+
+      {/* ========================================================= */}
+      {/* VISTA 3: DIRECTORIO DE CLIENTES Y GESTIÓN                 */}
+      {/* ========================================================= */}
+      {activeView === 'clientes' && (
+        <DirectorioClientes
+          clientes={clientes}
+          onNuevoClienteClick={() => setIsClienteModalOpen(true)}
+          onIniciarPedidoConCliente={handleIniciarPedidoConCliente}
+        />
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: GESTIÓN DE CLIENTES                                */}
+      {/* ========================================================= */}
+      <ClienteModal
+        isOpen={isClienteModalOpen}
+        onClose={() => setIsClienteModalOpen(false)}
+        clientes={clientes}
+        selectedCliente={selectedCliente}
+        onSelectCliente={handleSelectCliente}
+        onCrearCliente={handleCrearCliente}
+      />
+
+      {/* ========================================================= */}
+      {/* MODAL: FACTURA FISCAL OFICIAL Y TICKET IMPRIMIBLE         */}
+      {/* ========================================================= */}
+      <FacturaModal
+        isOpen={isFacturaModalOpen}
+        onClose={() => setIsFacturaModalOpen(false)}
+        factura={activeFactura}
+        onNuevaVenta={() => {
+          setIsFacturaModalOpen(false)
+          setActiveView('pos')
+        }}
+      />
+
+      {/* ========================================================= */}
+      {/* MODAL: AGREGAR NUEVO PLATILLO O BEBIDA AL MENÚ            */}
+      {/* ========================================================= */}
       {isAddModalOpen && (
         <div
           className="modal-backdrop"
@@ -676,7 +1041,6 @@ export default function App() {
 
             <form onSubmit={handleCreateProduct}>
               <div className="modal-body">
-                {/* Tipo: Comida o Bebida */}
                 <div className="form-group">
                   <label>Tipo de Producto:</label>
                   <div className="category-radio-group">
@@ -692,7 +1056,7 @@ export default function App() {
                       <div>
                         <strong>Comida</strong>
                         <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
-                          Platillos, snacks, postres
+                          Platillos, hamburguesas, tacos, pizza
                         </div>
                       </div>
                     </div>
@@ -709,14 +1073,13 @@ export default function App() {
                       <div>
                         <strong>Bebida</strong>
                         <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
-                          Cócteles, refrescos, café
+                          Cócteles, refrescos, cervezas, café
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Nombre */}
                 <div className="form-group">
                   <label>Nombre del Producto *</label>
                   <input
@@ -735,7 +1098,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* Precio */}
                 <div className="form-group">
                   <label>Precio de Venta ($ MXN) *</label>
                   <input
@@ -752,7 +1114,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* Descripción */}
                 <div className="form-group">
                   <label>Descripción / Ingredientes</label>
                   <textarea
@@ -769,7 +1130,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* Etiqueta especial */}
                 <div className="form-group">
                   <label>Etiqueta / Badge</label>
                   <input
@@ -783,7 +1143,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* URL de Imagen */}
                 <div className="form-group">
                   <label>URL de Imagen (opcional)</label>
                   <input
@@ -816,145 +1175,9 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL: TICKET DE VENTA COBRADO */}
-      {isReceiptModalOpen && lastReceipt && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setIsReceiptModalOpen(false)}
-        >
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '440px' }}
-          >
-            <div className="modal-header">
-              <h3 style={{ color: '#4ade80' }}>
-                <CheckCircle2 size={22} color="#4ade80" />
-                <span>¡Cobro Realizado con Éxito!</span>
-              </h3>
-              <button
-                className="btn-close-modal"
-                onClick={() => setIsReceiptModalOpen(false)}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <div className="ticket-receipt-card">
-                <div className="receipt-header">
-                  <h4>NOCTURNA BAR & GRILL</h4>
-                  <p style={{ fontSize: '0.78rem', color: '#9ca3af' }}>
-                    Punto de Venta Oficial
-                  </p>
-                  <p style={{ fontSize: '0.78rem', color: '#a855f7' }}>
-                    {lastReceipt.folio}
-                  </p>
-                  <p style={{ fontSize: '0.72rem', color: '#6b7280' }}>
-                    {lastReceipt.date} - {lastReceipt.time}
-                  </p>
-                  {lastReceipt.cajero && (
-                    <p style={{ fontSize: '0.74rem', color: '#c084fc', marginTop: '2px', fontWeight: '500' }}>
-                      Atendido por: {lastReceipt.cajero}
-                    </p>
-                  )}
-                </div>
-
-                <table className="receipt-items-table">
-                  <thead>
-                    <tr
-                      style={{
-                        borderBottom: '1px solid #374151',
-                        textAlign: 'left',
-                        color: '#c084fc'
-                      }}
-                    >
-                      <th>Cant.</th>
-                      <th>Desc.</th>
-                      <th style={{ textAlign: 'right' }}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lastReceipt.items.map((it) => (
-                      <tr key={it.id}>
-                        <td style={{ verticalAlign: 'top' }}>{it.quantity}x</td>
-                        <td>
-                          <div>{it.name}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#6b7280' }}>
-                            ${it.price.toFixed(2)}
-                          </div>
-                        </td>
-                        <td style={{ textAlign: 'right', verticalAlign: 'top' }}>
-                          ${(it.price * it.quantity).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                <div className="receipt-totals">
-                  <div
-                    style={{ display: 'flex', justifyContent: 'space-between' }}
-                  >
-                    <span>Subtotal:</span>
-                    <span>${lastReceipt.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div
-                    style={{ display: 'flex', justifyContent: 'space-between' }}
-                  >
-                    <span>IVA (16%):</span>
-                    <span>${lastReceipt.tax.toFixed(2)}</span>
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      color: '#c084fc'
-                    }}
-                  >
-                    <span>Método de pago:</span>
-                    <span>{lastReceipt.paymentMethod}</span>
-                  </div>
-                  <div className="big-total">
-                    <span>TOTAL PAGADO:</span>
-                    <span>${lastReceipt.total.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    textAlign: 'center',
-                    marginTop: '1.25rem',
-                    fontSize: '0.75rem',
-                    color: '#9ca3af',
-                    borderTop: '1px dashed #374151',
-                    paddingTop: '0.75rem'
-                  }}
-                >
-                  ¡Gracias por su consumo en Nocturna!
-                  <br />
-                  Vuelva pronto.
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                className="btn-add-product"
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={() => setIsReceiptModalOpen(false)}
-              >
-                <CheckCircle2 size={18} />
-                <span>Comenzar Nueva Venta</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* NOTIFICACIÓN TOAST FLOTANTE */}
       {toast && (
-        <div className="toast-container">
+        <div className="toast-container no-print">
           <div
             className={`toast ${
               toast.type === 'danger' ? 'toast-danger' : ''
