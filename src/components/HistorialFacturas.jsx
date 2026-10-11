@@ -20,7 +20,8 @@ export default function HistorialFacturas({
   ventas = [],
   onVerFactura,
   onRecargar,
-  onIrAlPOS
+  onIrAlPOS,
+  onCobrarPedido
 }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterTipo, setFilterTipo] = useState('ALL') // 'ALL' | 'LOCAL' | 'EN_LINEA' | 'LLEVAR'
@@ -265,20 +266,34 @@ export default function HistorialFacturas({
 
                 <div className="invoice-card-footer">
                   <div className="invoice-price-block">
-                    <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>TOTAL FACTURADO</span>
+                    <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>TOTAL DEL PEDIDO</span>
                     <div className="invoice-total-number">
                       ${Number(venta.total || 0).toFixed(2)} <small>MXN</small>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    className="btn-view-invoice"
-                    onClick={() => onVerFactura(venta)}
-                  >
-                    <Eye size={15} />
-                    <span>Ver Factura</span>
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    {onCobrarPedido && venta.estado === 'PENDIENTE_PAGO' && (
+                      <button
+                        type="button"
+                        className="btn-add-product"
+                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem' }}
+                        onClick={() => onCobrarPedido(venta)}
+                      >
+                        <Receipt size={14} />
+                        <span>Cobrar en Caja</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className="btn-view-invoice"
+                      onClick={() => onVerFactura(venta)}
+                    >
+                      <Eye size={15} />
+                      <span>{venta.estado === 'PENDIENTE_PAGO' ? 'Ver Comanda' : 'Ver Factura'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )

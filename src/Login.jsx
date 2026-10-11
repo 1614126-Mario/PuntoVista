@@ -85,12 +85,13 @@ export default function Login({ onLogin }) {
       const data = await authService.login(username.trim(), password)
 
       const roles = data.roles || []
-      const isAdmin = roles.some(r => r.toUpperCase().includes('ADMIN'))
-      const isCajero = roles.some(r => r.toUpperCase().includes('CAJERO'))
+      const isAdmin = roles.some(r => r.toUpperCase().includes('ADMIN')) || role === 'admin'
+      const isCajero = roles.some(r => r.toUpperCase().includes('CAJERO')) || role === 'cajero'
+      const isMesero = roles.some(r => r.toUpperCase().includes('MESERO')) || role === 'mesero'
 
       // Determinamos el perfil del usuario autenticado
       let userProfile = null
-      if (isAdmin) {
+      if (isAdmin && role === 'admin') {
         userProfile = {
           username: data.username || username.trim(),
           name: demoAccounts.admin.name,
@@ -99,7 +100,16 @@ export default function Login({ onLogin }) {
           avatar: 'DM',
           roles: roles
         }
-      } else if (isCajero) {
+      } else if (isMesero && role === 'mesero') {
+        userProfile = {
+          username: data.username || username.trim(),
+          name: demoAccounts.mesero.name,
+          role: 'mesero',
+          roleLabel: 'Mesero de Turno',
+          avatar: 'AS',
+          roles: roles
+        }
+      } else if (isCajero || role === 'cajero') {
         userProfile = {
           username: data.username || username.trim(),
           name: demoAccounts.cajero.name,
@@ -112,8 +122,8 @@ export default function Login({ onLogin }) {
         userProfile = {
           username: data.username || username.trim(),
           name: data.username || 'Usuario',
-          role: 'usuario',
-          roleLabel: 'Usuario del Sistema',
+          role: role || 'cajero',
+          roleLabel: demoAccounts[role]?.roleLabel || 'Usuario del Sistema',
           avatar: (data.username || 'US').slice(0, 2).toUpperCase(),
           roles: roles
         }
@@ -313,6 +323,18 @@ export default function Login({ onLogin }) {
                 <div className="quick-badge admin-badge">Admin</div>
                 <div className="quick-meta">
                   <strong>admin</strong> / admin123
+                </div>
+              </button>
+              <button
+                type="button"
+                className="quick-btn"
+                onClick={() => {
+                  handleSelectRole('mesero')
+                }}
+              >
+                <div className="quick-badge" style={{ background: '#059669', borderColor: '#34d399' }}>Mesero</div>
+                <div className="quick-meta">
+                  <strong>mesero</strong> / mesero123
                 </div>
               </button>
             </div>

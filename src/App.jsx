@@ -23,7 +23,9 @@ import {
   FileText,
   Globe,
   MapPin,
-  Phone
+  Phone,
+  TrendingUp,
+  Package
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from './data/initialProducts'
 import Login from './Login'
@@ -34,6 +36,8 @@ import ClienteModal from './components/ClienteModal'
 import FacturaModal from './components/FacturaModal'
 import HistorialFacturas from './components/HistorialFacturas'
 import DirectorioClientes from './components/DirectorioClientes'
+import PanelAdministrador from './components/PanelAdministrador'
+import PanelMesero from './components/PanelMesero'
 import './App.css'
 
 export default function App() {
@@ -47,8 +51,20 @@ export default function App() {
     }
   })
 
-  // Vista activa de la aplicación: 'pos' (Punto de venta) | 'historial' (Facturas & Pedidos) | 'clientes' (Directorio)
-  const [activeView, setActiveView] = useState('pos')
+  // Vista activa de la aplicación: 'pos' (Punto de venta) | 'historial' (Facturas & Pedidos) | 'admin' (Finanzas) | 'mesero' (Comandas) | 'clientes'
+  const [activeView, setActiveView] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nocturna_user')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed.role === 'admin') return 'admin'
+        if (parsed.role === 'mesero') return 'mesero'
+      }
+      return 'pos'
+    } catch {
+      return 'pos'
+    }
+  })
 
   // Estado de productos en catálogo (persiste cambios locales)
   const [products, setProducts] = useState(INITIAL_PRODUCTS)
@@ -164,6 +180,14 @@ export default function App() {
     setCurrentUser(user)
     if (remember) {
       localStorage.setItem('nocturna_user', JSON.stringify(user))
+    }
+    // Vista por defecto según rol
+    if (user.role === 'admin') {
+      setActiveView('admin')
+    } else if (user.role === 'mesero') {
+      setActiveView('mesero')
+    } else {
+      setActiveView('pos')
     }
     showToast(`¡Bienvenido a La Taberna de los Morenazos, ${user.name}!`, 'success')
   }
@@ -389,6 +413,88 @@ export default function App() {
     }
   }
 
+  // =========================================================
+  // MESERO: ENVIAR COMANDA A COCINA / GUARDAR PEDIDO PENDIENTE DE COBRO
+  // =========================================================
+  const handleRegistrarComandaMesero = async () => {
+    if (cart.length === 0) return
+
+    const clienteAsignado = selectedCliente || {
+      nombre: 'Consumidor',
+      apellido: 'Final',
+      documento: 'XAXX010101000',
+      telefono: '555-000-0000',
+      direccion: 'Consumo en Salón'
+    }
+
+    const payloadComanda = {
+      tipoPedido: orderType,
+      numeroMesa: orderType === 'LOCAL' ? tableNumber : '',
+      direccionEntrega: orderType === 'EN_LINEA' ? (deliveryAddress || clienteAsignado.direccion || '') : '',
+      metodoPago: 'Pendiente de Cobro ⏳',
+      notas: orderNotes.trim(),
+      subtotal,
+      iva: tax,
+      total: grandTotal,
+      estado: 'PENDIENTE_PAGO',
+      cliente: clienteAsignado.id ? { id: clienteAsignado.id } : clienteAsignado,
+      detalles: cart.map(it => ({
+        cantidad: it.quantity,
+        precioUnitario: it.price,
+        subtotal: it.price * it.quantity,
+        nombreProducto: it.name
+      }))
+    }
+
+    try {
+      const comandaGuardada = await ventaService.createVenta(payloadComanda)
+      const dataFinal = {
+        ...comandaGuardada,
+        folio: comandaGuardada.numeroFactura || `CMD-${Date.now().toString().slice(-6)}`,
+        items: [...cart],
+        detalles: comandaGuardada.detalles || [...cart],
+        subtotal,
+        iva: tax,
+        total: grandTotal,
+        cliente: clienteAsignado,
+        cajero: currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : 'Mesero',
+        estado: 'PENDIENTE_PAGO'
+      }
+
+      setVentas(prev => [dataFinal, ...prev])
+      setCart([])
+      setOrderNotes('')
+      showToast(`¡Comanda enviada con éxito para ${orderType === 'LOCAL' ? tableNumber : 'Entrega'}! Pasa a Caja para su cobro.`, 'success')
+      setActiveView('mesero')
+    } catch (err) {
+      alert('Error registrando comanda: ' + err.message)
+    }
+  }
+
+  // =========================================================
+  // CAJERO: COBRAR PEDIDO PENDIENTE REGISTRADO PREVIAMENTE
+  // =========================================================
+  const handleCobrarPedidoPendiente = async (pedido) => {
+    try {
+      const pedidoCobrado = {
+        ...pedido,
+        estado: 'FACTURADO',
+        paymentMethod: paymentMethod === 'cash' ? 'Efectivo 💵' : paymentMethod === 'card' ? 'Tarjeta 💳' : 'Transferencia 📱',
+        metodoPago: paymentMethod === 'cash' ? 'Efectivo 💵' : paymentMethod === 'card' ? 'Tarjeta 💳' : 'Transferencia 📱',
+        cajero: currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : 'Cajero en Turno'
+      }
+
+      await ventaService.saveLocal(pedidoCobrado)
+
+      setVentas(prev => prev.map(v => v.id === pedido.id ? pedidoCobrado : v))
+      setActiveFactura(pedidoCobrado)
+      setIsFacturaModalOpen(true)
+      showToast(`¡Pedido ${pedido.numeroFactura || pedido.folio} cobrado exitosamente! Factura emitida.`, 'success')
+    } catch (err) {
+      alert('Error cobrando pedido: ' + err.message)
+    }
+  }
+
   // Abrir factura desde el historial
   const handleVerFactura = (venta) => {
     setActiveFactura(venta)
@@ -418,38 +524,111 @@ export default function App() {
             </div>
           </div>
 
-          {/* PESTAÑAS DE NAVEGACIÓN: POS / HISTORIAL DE FACTURAS / CLIENTES */}
+          {/* PESTAÑAS DE NAVEGACIÓN SEGÚN EL ROL AUTENTICADO */}
           <nav className="header-nav">
-            <button
-              type="button"
-              className={`nav-tab-btn ${activeView === 'pos' ? 'active' : ''}`}
-              onClick={() => setActiveView('pos')}
-            >
-              <LayoutGrid size={16} />
-              <span>Tomar Pedido</span>
-            </button>
+            {/* Si es Mesero: acceso a Control de Comandas y Tomar Pedido */}
+            {currentUser.role === 'mesero' && (
+              <>
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'mesero' ? 'active' : ''}`}
+                  onClick={() => setActiveView('mesero')}
+                >
+                  <Utensils size={16} />
+                  <span>Mis Comandas</span>
+                  {ventas.length > 0 && (
+                    <span className="nav-badge-count">{ventas.length}</span>
+                  )}
+                </button>
 
-            <button
-              type="button"
-              className={`nav-tab-btn ${activeView === 'historial' ? 'active' : ''}`}
-              onClick={() => setActiveView('historial')}
-            >
-              <FileText size={16} />
-              <span>Facturas & Pedidos</span>
-              {ventas.length > 0 && (
-                <span className="nav-badge-count">{ventas.length}</span>
-              )}
-            </button>
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'pos' ? 'active' : ''}`}
+                  onClick={() => setActiveView('pos')}
+                >
+                  <Plus size={16} />
+                  <span>+ Tomar Pedido</span>
+                </button>
+              </>
+            )}
 
-            <button
-              type="button"
-              className={`nav-tab-btn ${activeView === 'clientes' ? 'active' : ''}`}
-              onClick={() => setActiveView('clientes')}
-            >
-              <Users size={16} />
-              <span>Clientes</span>
-              <span className="nav-badge-count">{clientes.length}</span>
-            </button>
+            {/* Si es Cajero: Cobro de Pedidos y Facturas */}
+            {currentUser.role === 'cajero' && (
+              <>
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'pos' ? 'active' : ''}`}
+                  onClick={() => setActiveView('pos')}
+                >
+                  <Receipt size={16} />
+                  <span>Caja & Cobro</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'historial' ? 'active' : ''}`}
+                  onClick={() => setActiveView('historial')}
+                >
+                  <FileText size={16} />
+                  <span>Facturas & Pedidos</span>
+                  {ventas.length > 0 && (
+                    <span className="nav-badge-count">{ventas.length}</span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'clientes' ? 'active' : ''}`}
+                  onClick={() => setActiveView('clientes')}
+                >
+                  <Users size={16} />
+                  <span>Clientes</span>
+                  <span className="nav-badge-count">{clientes.length}</span>
+                </button>
+              </>
+            )}
+
+            {/* Si es Admin: Panel Administrativo de Ganancias/Inventario, Historial, POS y Clientes */}
+            {currentUser.role === 'admin' && (
+              <>
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'admin' ? 'active' : ''}`}
+                  onClick={() => setActiveView('admin')}
+                >
+                  <TrendingUp size={16} />
+                  <span>Finanzas & Ganancias</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'historial' ? 'active' : ''}`}
+                  onClick={() => setActiveView('historial')}
+                >
+                  <FileText size={16} />
+                  <span>Ventas ({ventas.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'pos' ? 'active' : ''}`}
+                  onClick={() => setActiveView('pos')}
+                >
+                  <LayoutGrid size={16} />
+                  <span>Punto de Venta</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'clientes' ? 'active' : ''}`}
+                  onClick={() => setActiveView('clientes')}
+                >
+                  <Users size={16} />
+                  <span>Clientes</span>
+                  <span className="nav-badge-count">{clientes.length}</span>
+                </button>
+              </>
+            )}
           </nav>
 
           {/* ACCIONES DEL HEADER Y PERFIL */}
@@ -471,8 +650,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* Botón para restaurar catálogo */}
-            {activeView === 'pos' && (
+            {/* Botón para restaurar catálogo (solo visible para admin) */}
+            {currentUser.role === 'admin' && activeView === 'pos' && (
               <button
                 onClick={restoreDefaultProducts}
                 className="tab-btn"
@@ -482,8 +661,8 @@ export default function App() {
               </button>
             )}
 
-            {/* BOTÓN PARA AGREGAR NUEVO PLATILLO O BEBIDA */}
-            {activeView === 'pos' && (
+            {/* BOTÓN PARA AGREGAR NUEVO PLATILLO O BEBIDA (solo para admin) */}
+            {currentUser.role === 'admin' && activeView === 'pos' && (
               <button
                 onClick={() => setIsAddModalOpen(true)}
                 className="btn-add-product"
@@ -628,17 +807,19 @@ export default function App() {
                           <span className="product-badge-tag">{item.tag}</span>
                         )}
 
-                        {/* Eliminar del menú */}
-                        <button
-                          className="btn-delete-menu-item"
-                          title="Eliminar este platillo/bebida del menú"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteProductFromMenu(item.id, item.name)
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {/* Eliminar del menú (solo admin) */}
+                        {currentUser.role === 'admin' && (
+                          <button
+                            className="btn-delete-menu-item"
+                            title="Eliminar este platillo/bebida del menú"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteProductFromMenu(item.id, item.name)
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
 
                       {/* Información del Producto */}
@@ -953,16 +1134,30 @@ export default function App() {
                 <span>CANCELAR PEDIDO</span>
               </button>
 
-              {/* Botón de Finalizar, Cobrar y Generar Factura */}
-              <button
-                className="btn-checkout"
-                disabled={cart.length === 0}
-                onClick={handleCheckout}
-                title="Cobrar la orden y generar factura fiscal oficial"
-              >
-                <Receipt size={18} />
-                <span>COBRAR Y GENERAR FACTURA (${grandTotal.toFixed(2)})</span>
-              </button>
+              {/* Si es Mesero: Solo envía el pedido / comanda a cocina y queda pendiente de cobro */}
+              {currentUser.role === 'mesero' ? (
+                <button
+                  className="btn-checkout"
+                  style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}
+                  disabled={cart.length === 0}
+                  onClick={handleRegistrarComandaMesero}
+                  title="Enviar la comanda a cocina y registrar el pedido pendiente de cobro"
+                >
+                  <Utensils size={18} />
+                  <span>REGISTRAR Y ENVIAR COMANDA (${grandTotal.toFixed(2)})</span>
+                </button>
+              ) : (
+                /* Si es Cajero o Admin: Cobra la orden y emite factura oficial */
+                <button
+                  className="btn-checkout"
+                  disabled={cart.length === 0}
+                  onClick={handleCheckout}
+                  title="Cobrar la orden y generar factura fiscal oficial"
+                >
+                  <Receipt size={18} />
+                  <span>COBRAR Y GENERAR FACTURA (${grandTotal.toFixed(2)})</span>
+                </button>
+              )}
             </div>
           </aside>
         </main>
@@ -981,11 +1176,34 @@ export default function App() {
             showToast('Listado de facturas actualizado', 'success')
           }}
           onIrAlPOS={() => setActiveView('pos')}
+          onCobrarPedido={handleCobrarPedidoPendiente}
         />
       )}
 
       {/* ========================================================= */}
-      {/* VISTA 3: DIRECTORIO DE CLIENTES Y GESTIÓN                 */}
+      {/* VISTA 3: PANEL ADMINISTRADOR: FINANZAS, GANANCIA Y PRODUCTOS */}
+      {/* ========================================================= */}
+      {activeView === 'admin' && (
+        <PanelAdministrador
+          ventas={ventas}
+          products={products}
+          onVerFactura={handleVerFactura}
+          onVerCatalogo={() => setActiveView('pos')}
+        />
+      )}
+
+      {/* ========================================================= */}
+      {/* VISTA 4: PANEL MESERO: COMANDAS, ENTREGAS Y QUIENES DEBEN */}
+      {/* ========================================================= */}
+      {activeView === 'mesero' && (
+        <PanelMesero
+          ventas={ventas}
+          onTomarNuevoPedido={() => setActiveView('pos')}
+        />
+      )}
+
+      {/* ========================================================= */}
+      {/* VISTA 5: DIRECTORIO DE CLIENTES Y GESTIÓN                 */}
       {/* ========================================================= */}
       {activeView === 'clientes' && (
         <DirectorioClientes
