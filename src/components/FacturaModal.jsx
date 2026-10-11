@@ -257,13 +257,13 @@ export default function FacturaModal({
                     <Sparkles size={22} />
                   </div>
                   <div>
-                    <h2 className="invoice-brand-title">NOCTURNA BAR & GRILL</h2>
-                    <span className="invoice-brand-tag">Gourmet Food & Select Drinks</span>
+                    <h2 className="invoice-brand-title">LA TABERNA DE LOS MORENAZOS</h2>
+                    <span className="invoice-brand-tag">Comida Gourmet & Bebidas Selectas</span>
                   </div>
                 </div>
 
                 <div className="issuer-legal-details">
-                  <p><strong>Emisor:</strong> RESTAURANTE NOCTURNA S.A. DE C.V.</p>
+                  <p><strong>Emisor:</strong> LA TABERNA DE LOS MORENAZOS S.A. DE C.V.</p>
                   <p><strong>RFC / NIT:</strong> NOC-202610-HG1</p>
                   <p><strong>Régimen Fiscal:</strong> 601 - General de Ley Personas Morales</p>
                   <p><strong>Dirección:</strong> Av. Insurgentes Sur 1234, Benito Juárez, CDMX</p>
@@ -462,7 +462,7 @@ export default function FacturaModal({
           /* =============================================================== */
           <div className="printable-ticket-sheet" id="ticket-print-area">
             <div className="ticket-header-block">
-              <h3>NOCTURNA BAR & GRILL</h3>
+              <h3>LA TABERNA DE LOS MORENAZOS</h3>
               <p>RFC: NOC-202610-HG1</p>
               <p>Av. Insurgentes Sur 1234, CDMX</p>
               <p>Tel: +52 55 5555-8899</p>

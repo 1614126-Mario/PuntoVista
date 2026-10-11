@@ -144,7 +144,7 @@ export default function Login({ onLogin }) {
               <Sparkles size={32} className="pulse-icon" />
             </div>
             <h1 className="login-title">
-              PUNTO DE VENTA <span className="login-purple-gradient">NOCTURNA</span>
+              <span className="login-purple-gradient">La Taberna de los Morenazos</span>
             </h1>
             <p className="login-subtitle">
               Ingresa tus credenciales para acceder al sistema
@@ -281,7 +281,7 @@ export default function Login({ onLogin }) {
               ) : (
                 <>
                   <LogIn size={20} />
-                  <span>Iniciar Sesión en Nocturna</span>
+                  <span>Iniciar Sesión en La Taberna</span>
                 </>
               )}
             </button>
@@ -322,7 +322,7 @@ export default function Login({ onLogin }) {
           <div className="login-footer">
             <div className="security-tag">
               <ShieldCheck size={15} color="#a855f7" />
-              <span>Conexión protegida SSL • Terminal Nocturna POS</span>
+              <span>Conexión protegida SSL • La Taberna de los Morenazos POS</span>
             </div>
           </div>
         </div>
@@ -340,7 +340,7 @@ export default function Login({ onLogin }) {
             </div>
             <div className="login-modal-body">
               <p>
-                Por razones de seguridad del Punto de Venta <strong>Nocturna</strong>, las contraseñas son administradas por el Gerente del sistema.
+                Por razones de seguridad del Punto de Venta <strong>La Taberna de los Morenazos</strong>, las contraseñas son administradas por el Gerente del sistema.
               </p>
               <div className="login-modal-info-box">
                 <div className="info-item">

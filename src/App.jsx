@@ -165,7 +165,7 @@ export default function App() {
     if (remember) {
       localStorage.setItem('nocturna_user', JSON.stringify(user))
     }
-    showToast(`¡Bienvenido a Nocturna, ${user.name}!`, 'success')
+    showToast(`¡Bienvenido a La Taberna de los Morenazos, ${user.name}!`, 'success')
   }
 
   const handleLogout = async () => {
@@ -412,7 +412,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="brand-title">
-                PUNTO DE VENTA <span>NOCTURNA</span>
+                <span>La Taberna de los Morenazos</span>
               </h1>
               <p className="brand-subtitle">Comida Gourmet & Bebidas Selectas</p>
             </div>
@@ -699,189 +699,192 @@ export default function App() {
               </div>
             </div>
 
-            {/* SELECTOR DE MODALIDAD: CONSUMO EN MESA vs PEDIDO EN LÍNEA vs LLEVAR */}
-            <div className="order-modality-block">
-              <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>
-                Modalidad del Pedido:
-              </label>
-              <div className="modality-selector">
-                <button
-                  type="button"
-                  className={`btn-modality ${orderType === 'LOCAL' ? 'active' : ''}`}
-                  onClick={() => setOrderType('LOCAL')}
-                  title="Consumo en el restaurante / comedor (lo que han comido)"
-                >
-                  <Utensils size={15} />
-                  <span>En Restaurante</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`btn-modality ${orderType === 'EN_LINEA' ? 'active' : ''}`}
-                  onClick={() => setOrderType('EN_LINEA')}
-                  title="Pedido en línea / Envío a domicilio"
-                >
-                  <Truck size={15} />
-                  <span>Pedido en Línea</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`btn-modality ${orderType === 'LLEVAR' ? 'active' : ''}`}
-                  onClick={() => setOrderType('LLEVAR')}
-                  title="Para llevar / recoger en mostrador"
-                >
-                  <ShoppingBag size={15} />
-                  <span>Para Llevar</span>
-                </button>
-              </div>
-            </div>
-
-            {/* SELECCIÓN Y GESTIÓN DEL CLIENTE */}
-            <div className="order-client-card">
-              <div className="order-client-header">
-                <div className="client-identity-box">
-                  <div className="client-avatar-round">
-                    {(selectedCliente?.nombre?.[0] || 'C').toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="client-name-bold">
-                      {selectedCliente ? `${selectedCliente.nombre} ${selectedCliente.apellido || ''}` : 'Consumidor Final'}
-                    </div>
-                    <div className="client-rfc-sub">
-                      {selectedCliente?.documento ? `RFC: ${selectedCliente.documento}` : 'Sin RFC asignado'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="order-client-actions">
+            {/* ÁREA SCROLLABLE: Modalidad + Cliente + Items */}
+            <div className="order-scrollable-area">
+              {/* SELECTOR DE MODALIDAD */}
+              <div className="order-modality-block">
+                <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>
+                  Modalidad del Pedido:
+                </label>
+                <div className="modality-selector">
                   <button
                     type="button"
-                    className="btn-client-tag"
-                    onClick={() => setIsClienteModalOpen(true)}
-                    title="Seleccionar o registrar un nuevo cliente"
+                    className={`btn-modality ${orderType === 'LOCAL' ? 'active' : ''}`}
+                    onClick={() => setOrderType('LOCAL')}
+                    title="Consumo en el restaurante / comedor (lo que han comido)"
                   >
-                    <UserPlus size={13} />
-                    <span>{selectedCliente ? 'Cambiar' : 'Asignar'}</span>
+                    <Utensils size={15} />
+                    <span>En Restaurante</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`btn-modality ${orderType === 'EN_LINEA' ? 'active' : ''}`}
+                    onClick={() => setOrderType('EN_LINEA')}
+                    title="Pedido en línea / Envío a domicilio"
+                  >
+                    <Truck size={15} />
+                    <span>Pedido en Línea</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`btn-modality ${orderType === 'LLEVAR' ? 'active' : ''}`}
+                    onClick={() => setOrderType('LLEVAR')}
+                    title="Para llevar / recoger en mostrador"
+                  >
+                    <ShoppingBag size={15} />
+                    <span>Para Llevar</span>
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* CAMPOS ESPECÍFICOS SEGÚN MODALIDAD */}
-            <div className="order-subfields">
-              {orderType === 'LOCAL' && (
-                <div>
-                  <input
-                    type="text"
-                    className="subfield-input"
-                    placeholder="Mesa / Zona (Ej: Mesa 4, Terraza 2, Barra)"
-                    value={tableNumber}
-                    onChange={(e) => setTableNumber(e.target.value)}
-                  />
+              {/* SELECCIÓN Y GESTIÓN DEL CLIENTE */}
+              <div className="order-client-card">
+                <div className="order-client-header">
+                  <div className="client-identity-box">
+                    <div className="client-avatar-round">
+                      {(selectedCliente?.nombre?.[0] || 'C').toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="client-name-bold">
+                        {selectedCliente ? `${selectedCliente.nombre} ${selectedCliente.apellido || ''}` : 'Consumidor Final'}
+                      </div>
+                      <div className="client-rfc-sub">
+                        {selectedCliente?.documento ? `RFC: ${selectedCliente.documento}` : 'Sin RFC asignado'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="order-client-actions">
+                    <button
+                      type="button"
+                      className="btn-client-tag"
+                      onClick={() => setIsClienteModalOpen(true)}
+                      title="Seleccionar o registrar un nuevo cliente"
+                    >
+                      <UserPlus size={13} />
+                      <span>{selectedCliente ? 'Cambiar' : 'Asignar'}</span>
+                    </button>
+                  </div>
                 </div>
-              )}
+              </div>
 
-              {orderType === 'EN_LINEA' && (
-                <>
+              {/* CAMPOS ESPECÍFICOS SEGÚN MODALIDAD */}
+              <div className="order-subfields">
+                {orderType === 'LOCAL' && (
                   <div>
                     <input
                       type="text"
                       className="subfield-input"
-                      placeholder="Dirección de entrega a domicilio *"
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      placeholder="Mesa / Zona (Ej: Mesa 4, Terraza 2, Barra)"
+                      value={tableNumber}
+                      onChange={(e) => setTableNumber(e.target.value)}
                     />
                   </div>
+                )}
+
+                {orderType === 'EN_LINEA' && (
+                  <>
+                    <div>
+                      <input
+                        type="text"
+                        className="subfield-input"
+                        placeholder="Dirección de entrega a domicilio *"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        className="subfield-input"
+                        placeholder="Instrucciones de entrega (Apto, timbre, referencias)..."
+                        value={orderNotes}
+                        onChange={(e) => setOrderNotes(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {orderType === 'LLEVAR' && (
                   <div>
                     <input
                       type="text"
                       className="subfield-input"
-                      placeholder="Instrucciones de entrega (Apto, timbre, referencias)..."
+                      placeholder="Notas para el pedido (Ej: Extra servilletas)..."
                       value={orderNotes}
                       onChange={(e) => setOrderNotes(e.target.value)}
                     />
                   </div>
-                </>
-              )}
+                )}
+              </div>
 
-              {orderType === 'LLEVAR' && (
-                <div>
-                  <input
-                    type="text"
-                    className="subfield-input"
-                    placeholder="Notas para el pedido (Ej: Extra servilletas)..."
-                    value={orderNotes}
-                    onChange={(e) => setOrderNotes(e.target.value)}
-                  />
+              {/* Lista de Productos Agregados */}
+              {cart.length === 0 ? (
+                <div className="empty-cart-state">
+                  <ShoppingBag className="empty-cart-icon" />
+                  <h4 style={{ color: '#fff' }}>Orden Vacía</h4>
+                  <p style={{ fontSize: '0.82rem' }}>
+                    Selecciona comidas o bebidas del menú pulsando el botón{' '}
+                    <strong style={{ color: '#a855f7' }}>+ Agregar</strong>.
+                  </p>
+                </div>
+              ) : (
+                <div className="order-items-list-inner">
+                  {cart.map((item) => (
+                    <div key={item.id} className="cart-item-row">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="cart-item-thumb"
+                      />
+
+                      <div className="cart-item-details">
+                        <div className="cart-item-name" title={item.name}>
+                          {item.name}
+                        </div>
+                        <div className="cart-item-price-unit">
+                          ${item.price.toFixed(2)} c/u
+                        </div>
+                      </div>
+
+                      <div className="cart-qty-controls">
+                        <button
+                          className="btn-qty"
+                          onClick={() => decreaseQuantity(item.id)}
+                          title="Disminuir cantidad"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="cart-qty-number">{item.quantity}</span>
+                        <button
+                          className="btn-qty"
+                          onClick={() => addToCart(item)}
+                          title="Agregar una unidad más"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+
+                      <div className="cart-item-subtotal">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </div>
+
+                      <button
+                        className="btn-remove-item"
+                        onClick={() => removeFromCart(item.id, item.name)}
+                        title="Eliminar de la orden"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Lista de Productos Agregados */}
-            {cart.length === 0 ? (
-              <div className="empty-cart-state">
-                <ShoppingBag className="empty-cart-icon" />
-                <h4 style={{ color: '#fff' }}>Orden Vacía</h4>
-                <p style={{ fontSize: '0.82rem' }}>
-                  Selecciona comidas o bebidas del menú pulsando el botón{' '}
-                  <strong style={{ color: '#a855f7' }}>+ Agregar</strong>.
-                </p>
-              </div>
-            ) : (
-              <div className="order-items-list">
-                {cart.map((item) => (
-                  <div key={item.id} className="cart-item-row">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="cart-item-thumb"
-                    />
-
-                    <div className="cart-item-details">
-                      <div className="cart-item-name" title={item.name}>
-                        {item.name}
-                      </div>
-                      <div className="cart-item-price-unit">
-                        ${item.price.toFixed(2)} c/u
-                      </div>
-                    </div>
-
-                    <div className="cart-qty-controls">
-                      <button
-                        className="btn-qty"
-                        onClick={() => decreaseQuantity(item.id)}
-                        title="Disminuir cantidad"
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span className="cart-qty-number">{item.quantity}</span>
-                      <button
-                        className="btn-qty"
-                        onClick={() => addToCart(item)}
-                        title="Agregar una unidad más"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-
-                    <div className="cart-item-subtotal">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </div>
-
-                    <button
-                      className="btn-remove-item"
-                      onClick={() => removeFromCart(item.id, item.name)}
-                      title="Eliminar de la orden"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Totales y Cobro con Factura */}
+            {/* FOOTER FIJO: Totales + Métodos de pago + Botones de acción */}
             <div className="order-footer">
               <div className="summary-line">
                 <span>Subtotal ({totalItemsCount} arts.)</span>
@@ -906,9 +909,7 @@ export default function App() {
                 <div className="payment-selector">
                   <button
                     type="button"
-                    className={`btn-payment-method ${
-                      paymentMethod === 'cash' ? 'active' : ''
-                    }`}
+                    className={`btn-payment-method ${paymentMethod === 'cash' ? 'active' : ''}`}
                     onClick={() => setPaymentMethod('cash')}
                   >
                     <Banknote size={16} />
@@ -916,9 +917,7 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    className={`btn-payment-method ${
-                      paymentMethod === 'card' ? 'active' : ''
-                    }`}
+                    className={`btn-payment-method ${paymentMethod === 'card' ? 'active' : ''}`}
                     onClick={() => setPaymentMethod('card')}
                   >
                     <CreditCard size={16} />
@@ -926,9 +925,7 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    className={`btn-payment-method ${
-                      paymentMethod === 'transfer' ? 'active' : ''
-                    }`}
+                    className={`btn-payment-method ${paymentMethod === 'transfer' ? 'active' : ''}`}
                     onClick={() => setPaymentMethod('transfer')}
                   >
                     <CheckCircle2 size={16} />
@@ -936,9 +933,7 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    className={`btn-payment-method ${
-                      paymentMethod === 'online' ? 'active' : ''
-                    }`}
+                    className={`btn-payment-method ${paymentMethod === 'online' ? 'active' : ''}`}
                     onClick={() => setPaymentMethod('online')}
                   >
                     <Globe size={16} />
@@ -946,6 +941,17 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Botón de Cancelar Pedido */}
+              <button
+                className="btn-cancel-order"
+                disabled={cart.length === 0}
+                onClick={clearCart}
+                title="Cancelar el pedido actual y vaciar la orden"
+              >
+                <X size={18} />
+                <span>CANCELAR PEDIDO</span>
+              </button>
 
               {/* Botón de Finalizar, Cobrar y Generar Factura */}
               <button
