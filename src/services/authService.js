@@ -70,6 +70,23 @@ export const authService = {
   },
 
   /**
+   * Verifica si la sesión del backend sigue activa.
+   * @returns {Promise<'ok'|'expirada'|'sin_conexion'>}
+   */
+  async verificarSesion() {
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { 'Accept': 'application/json' },
+        credentials: 'include'
+      })
+      if (response.ok) return 'ok'
+      return response.status === 401 || response.status === 403 ? 'expirada' : 'sin_conexion'
+    } catch {
+      return 'sin_conexion'
+    }
+  },
+
+  /**
    * Cierra la sesión en el backend invalidando la sesión HTTP
    */
   async logout() {

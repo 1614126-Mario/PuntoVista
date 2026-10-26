@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import {
   Plus,
   Minus,
@@ -30,7 +30,11 @@ import {
   ShoppingCart
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from './data/initialProducts'
+import { PAYMENT_LABELS } from './data/paymentInfo'
+import PaymentDetails from './components/PaymentDetails'
 import Login from './Login'
+import TiendaEnLinea from './components/TiendaEnLinea'
+import CobroModal from './components/CobroModal'
 import authService from './services/authService'
 import clienteService from './services/clienteService'
 import ventaService from './services/ventaService'
@@ -52,6 +56,24 @@ export default function App() {
       return null
     }
   })
+
+  // Sin sesión: se muestra la tienda pública; el personal entra con #/login
+  const [showLogin, setShowLogin] = useState(() => window.location.hash === '#/login')
+  const pedidosOnlineVistos = useRef(null)
+
+  // Cobro de pedidos pendientes (modal) y filtro con el que se abre el historial
+  const [pedidoACobrar, setPedidoACobrar] = useState(null)
+  const [historialFiltro, setHistorialFiltro] = useState('ALL')
+
+  const irALogin = () => {
+    window.location.hash = '#/login'
+    setShowLogin(true)
+  }
+
+  const irATienda = () => {
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+    setShowLogin(false)
+  }
 
   // Vista activa de la aplicación: 'pos' (Punto de venta) | 'historial' (Facturas & Pedidos) | 'admin' (Finanzas) | 'mesero' (Comandas) | 'clientes'
   const [activeView, setActiveView] = useState(() => {
@@ -105,6 +127,9 @@ export default function App() {
   // Notificación Toast
   const [toast, setToast] = useState(null)
 
+  // Estado de la conexión con el backend: 'ok' | 'sin_sesion' | 'sin_conexion'
+  const [servidorEstado, setServidorEstado] = useState('ok')
+
   // Formulario para nuevo producto
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -144,6 +169,7 @@ export default function App() {
       try {
         const salesList = await ventaService.getVentas()
         setVentas(salesList)
+        setServidorEstado(ventaService.estadoServidor)
       } catch (err) {
         console.warn('Error cargando ventas:', err)
       }
@@ -153,6 +179,72 @@ export default function App() {
       loadInitialData()
     }
   }, [currentUser])
+
+  // El filtro del historial solo aplica una vez, al llegar desde el botón "Por cobrar"
+  useEffect(() => {
+    if (activeView !== 'historial') setHistorialFiltro('ALL')
+  }, [activeView])
+
+  // Si el navegador recordaba al usuario pero el backend ya no tiene su sesión (p. ej. se reinició),
+  // se pide volver a ingresar para que los pedidos sí lleguen al servidor y a caja.
+  useEffect(() => {
+    if (!currentUser) return
+    authService.verificarSesion().then((estado) => {
+      if (estado === 'expirada') {
+        localStorage.removeItem('nocturna_user')
+        setCurrentUser(null)
+        setShowLogin(true)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Actualiza las ventas cada 10 s para que lleguen los pedidos hechos desde la tienda pública
+  useEffect(() => {
+    if (!currentUser) {
+      pedidosOnlineVistos.current = null
+      return undefined
+    }
+
+    const refrescar = async () => {
+      try {
+        const lista = await ventaService.getVentas()
+        setVentas(lista)
+        setServidorEstado(ventaService.estadoServidor)
+
+        const pendientes = lista
+          .filter((v) => v.tipoPedido === 'EN_LINEA' && v.estado === 'PENDIENTE_PAGO')
+          .map((v) => v.id)
+
+        if (pedidosOnlineVistos.current === null) {
+          pedidosOnlineVistos.current = new Set(pendientes)
+        } else {
+          const nuevos = pendientes.filter((id) => !pedidosOnlineVistos.current.has(id))
+          if (nuevos.length > 0) {
+            showToast(`🛵 ${nuevos.length === 1 ? 'Nuevo pedido en línea' : `${nuevos.length} nuevos pedidos en línea`}`, 'success')
+          }
+          pedidosOnlineVistos.current = new Set(pendientes)
+        }
+      } catch (err) {
+        console.warn('No se pudo actualizar la lista de pedidos:', err)
+      }
+    }
+
+    const id = setInterval(refrescar, 10000)
+    return () => clearInterval(id)
+  }, [currentUser])
+
+  // Si la venta/comanda solo se guardó en este navegador, caja y los demás usuarios no la verán
+  const avisarSiNoLlegoAlServidor = (venta) => {
+    setServidorEstado(ventaService.estadoServidor)
+    if (venta?.soloLocal) {
+      alert(
+        ventaService.estadoServidor === 'sin_sesion'
+          ? 'ATENCIÓN: este pedido NO llegó al servidor porque tu sesión con el backend venció o no es válida. Caja no lo verá.\n\nCierra sesión, vuelve a ingresar y registra el pedido otra vez.'
+          : 'ATENCIÓN: este pedido NO llegó al servidor (sin conexión con el backend). Caja no lo verá.\n\nVerifica que el backend esté encendido y vuelve a registrar el pedido.'
+      )
+    }
+  }
 
   // Al cambiar de cliente seleccionado, auto-rellenar la dirección de entrega
   const handleSelectCliente = (cliente) => {
@@ -203,6 +295,7 @@ export default function App() {
         console.warn('Error al cerrar sesión en el backend:', err)
       }
       setCurrentUser(null)
+      setShowLogin(true)
       localStorage.removeItem('nocturna_user')
       showToast('Sesión cerrada con éxito', 'danger')
     }
@@ -342,14 +435,7 @@ export default function App() {
       tipoPedido: orderType,
       numeroMesa: orderType === 'LOCAL' ? tableNumber : '',
       direccionEntrega: orderType === 'EN_LINEA' ? (deliveryAddress || clienteAsignado.direccion || '') : '',
-      metodoPago:
-        paymentMethod === 'cash'
-          ? 'Efectivo 💵'
-          : paymentMethod === 'card'
-          ? 'Tarjeta 💳'
-          : paymentMethod === 'online'
-          ? 'Pago en Línea 🌐'
-          : 'Transferencia 📱',
+      metodoPago: PAYMENT_LABELS[paymentMethod],
       notas: orderNotes.trim(),
       subtotal,
       iva: tax,
@@ -367,6 +453,7 @@ export default function App() {
     try {
       // Guardar en backend (o sincronizar localmente)
       const ventaRegistrada = await ventaService.createVenta(payloadVenta)
+      avisarSiNoLlegoAlServidor(ventaRegistrada)
 
       // Completar objeto para el modal de Factura con datos de presentación
       const facturaData = {
@@ -452,6 +539,7 @@ export default function App() {
 
     try {
       const comandaGuardada = await ventaService.createVenta(payloadComanda)
+      avisarSiNoLlegoAlServidor(comandaGuardada)
       const dataFinal = {
         ...comandaGuardada,
         folio: comandaGuardada.numeroFactura || `CMD-${Date.now().toString().slice(-6)}`,
@@ -479,20 +567,24 @@ export default function App() {
   // =========================================================
   // CAJERO: COBRAR PEDIDO PENDIENTE REGISTRADO PREVIAMENTE
   // =========================================================
-  const handleCobrarPedidoPendiente = async (pedido) => {
+  const handleCobrarPedidoPendiente = async (pedido, metodoKey = paymentMethod) => {
     try {
       const pedidoCobrado = {
         ...pedido,
         estado: 'FACTURADO',
-        paymentMethod: paymentMethod === 'cash' ? 'Efectivo 💵' : paymentMethod === 'card' ? 'Tarjeta 💳' : 'Transferencia 📱',
-        metodoPago: paymentMethod === 'cash' ? 'Efectivo 💵' : paymentMethod === 'card' ? 'Tarjeta 💳' : 'Transferencia 📱',
+        paymentMethod: PAYMENT_LABELS[metodoKey],
+        metodoPago: PAYMENT_LABELS[metodoKey],
         cajero: currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : 'Cajero en Turno'
       }
 
-      await ventaService.saveLocal(pedidoCobrado)
+      const guardada = await ventaService.cobrar(pedido, pedidoCobrado.metodoPago)
+      const pedidoFinal = guardada ? { ...pedidoCobrado, ...guardada, estado: 'FACTURADO' } : pedidoCobrado
 
-      setVentas(prev => prev.map(v => v.id === pedido.id ? pedidoCobrado : v))
-      setActiveFactura(pedidoCobrado)
+      ventaService.saveLocal(pedidoFinal)
+
+      setVentas(prev => prev.map(v => v.id === pedido.id ? pedidoFinal : v))
+      setPedidoACobrar(null)
+      setActiveFactura(pedidoFinal)
       setIsFacturaModalOpen(true)
       showToast(`¡Pedido ${pedido.numeroFactura || pedido.folio} cobrado exitosamente! Factura emitida.`, 'success')
     } catch (err) {
@@ -508,8 +600,12 @@ export default function App() {
 
   // SI NO HAY SESIÓN INICIADA, MOSTRAR LA PANTALLA DE LOGIN
   if (!currentUser) {
-    return <Login onLogin={handleLogin} />
+    return showLogin
+      ? <Login onLogin={handleLogin} onVolver={irATienda} />
+      : <TiendaEnLinea onAccesoPersonal={irALogin} />
   }
+
+  const pedidosPorCobrar = ventas.filter((v) => v.estado === 'PENDIENTE_PAGO').length
 
   return (
     <div className="pos-container">
@@ -638,6 +734,25 @@ export default function App() {
 
           {/* ACCIONES DEL HEADER Y PERFIL */}
           <div className="header-actions">
+            {pedidosPorCobrar > 0 && (
+              <button
+                type="button"
+                className="tab-btn"
+                style={{ color: '#fbbf24', borderColor: 'rgba(245, 158, 11, 0.5)' }}
+                onClick={() => {
+                  if (currentUser.role === 'mesero') {
+                    setActiveView('mesero')
+                  } else {
+                    setHistorialFiltro('DEBEN')
+                    setActiveView('historial')
+                  }
+                }}
+                title="Pedidos pendientes de cobro (mesas, para llevar y pedidos en línea)"
+              >
+                <Receipt size={15} /> Por cobrar ({pedidosPorCobrar})
+              </button>
+            )}
+
             {/* Perfil del Usuario Activo */}
             <div className="user-profile-badge">
               <div className="user-avatar">{currentUser.avatar || 'U'}</div>
@@ -679,6 +794,23 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {servidorEstado !== 'ok' && (
+        <div
+          style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            borderBottom: '1px solid rgba(239, 68, 68, 0.5)',
+            color: '#fca5a5',
+            padding: '0.55rem 1rem',
+            textAlign: 'center',
+            fontSize: '0.85rem'
+          }}
+        >
+          {servidorEstado === 'sin_sesion'
+            ? '⚠️ Tu sesión con el servidor no es válida: los pedidos que tomes NO llegarán a caja. Cierra sesión y vuelve a ingresar.'
+            : '⚠️ Sin conexión con el servidor: los pedidos que tomes NO llegarán a caja hasta que se restablezca.'}
+        </div>
+      )}
 
       {/* ========================================================= */}
       {/* VISTA 1: PUNTO DE VENTA / CATÁLOGO + TICKET DE ORDEN      */}
@@ -1135,6 +1267,8 @@ export default function App() {
                     <span>En Línea</span>
                   </button>
                 </div>
+
+                <PaymentDetails key={paymentMethod} method={paymentMethod} total={grandTotal} />
               </div>
 
               {/* Botón de Cancelar Pedido */}
@@ -1212,7 +1346,8 @@ export default function App() {
             showToast('Listado de facturas actualizado', 'success')
           }}
           onIrAlPOS={() => setActiveView('pos')}
-          onCobrarPedido={handleCobrarPedidoPendiente}
+          onCobrarPedido={setPedidoACobrar}
+          filtroInicial={historialFiltro}
         />
       )}
 
@@ -1433,6 +1568,14 @@ export default function App() {
             </form>
           </div>
         </div>
+      )}
+
+      {pedidoACobrar && (
+        <CobroModal
+          pedido={pedidoACobrar}
+          onConfirmar={handleCobrarPedidoPendiente}
+          onCerrar={() => setPedidoACobrar(null)}
+        />
       )}
 
       {/* NOTIFICACIÓN TOAST FLOTANTE */}

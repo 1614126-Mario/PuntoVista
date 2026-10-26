@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    host: true, // permite abrir la app desde otros dispositivos de la red (celular)
     proxy: {
       '/api': {
         target: 'http://localhost:8081',

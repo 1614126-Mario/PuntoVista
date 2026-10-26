@@ -13,7 +13,8 @@ import {
   DollarSign,
   TrendingUp,
   Receipt,
-  RotateCcw
+  RotateCcw,
+  AlertCircle
 } from 'lucide-react'
 
 export default function HistorialFacturas({
@@ -21,15 +22,18 @@ export default function HistorialFacturas({
   onVerFactura,
   onRecargar,
   onIrAlPOS,
-  onCobrarPedido
+  onCobrarPedido,
+  filtroInicial = 'ALL'
 }) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterTipo, setFilterTipo] = useState('ALL') // 'ALL' | 'LOCAL' | 'EN_LINEA' | 'LLEVAR'
+  const [filterTipo, setFilterTipo] = useState(filtroInicial) // 'ALL' | 'LOCAL' | 'EN_LINEA' | 'LLEVAR' | 'DEBEN'
 
   // Filtrado de ventas
   const filteredVentas = useMemo(() => {
-    return ventas.filter((v) => {
-      const matchTipo = filterTipo === 'ALL' || (v.tipoPedido || 'LOCAL') === filterTipo
+    const lista = ventas.filter((v) => {
+      const matchTipo =
+        filterTipo === 'ALL' ||
+        (filterTipo === 'DEBEN' ? v.estado === 'PENDIENTE_PAGO' : (v.tipoPedido || 'LOCAL') === filterTipo)
 
       const q = searchQuery.toLowerCase().trim()
       if (!q) return matchTipo
@@ -42,7 +46,14 @@ export default function HistorialFacturas({
       const matchSearch = folio.includes(q) || clienteNom.includes(q) || mesa.includes(q) || dir.includes(q)
       return matchTipo && matchSearch
     })
+
+    // Los pedidos pendientes de cobro van primero
+    return [...lista].sort(
+      (a, b) => Number(b.estado === 'PENDIENTE_PAGO') - Number(a.estado === 'PENDIENTE_PAGO')
+    )
   }, [ventas, filterTipo, searchQuery])
+
+  const pedidosPorCobrar = ventas.filter((v) => v.estado === 'PENDIENTE_PAGO').length
 
   // Métricas
   const totalFacturado = ventas.reduce((acc, v) => acc + Number(v.total || 0), 0)
@@ -133,6 +144,14 @@ export default function HistorialFacturas({
             onClick={() => setFilterTipo('ALL')}
           >
             <Filter size={14} /> Todos ({ventas.length})
+          </button>
+          <button
+            type="button"
+            className={`filter-pill ${filterTipo === 'DEBEN' ? 'active' : ''}`}
+            onClick={() => setFilterTipo('DEBEN')}
+            style={{ color: '#fbbf24', borderColor: filterTipo === 'DEBEN' ? '#f59e0b' : 'rgba(245, 158, 11, 0.3)' }}
+          >
+            <AlertCircle size={14} /> Por Cobrar / Deben ({pedidosPorCobrar})
           </button>
           <button
             type="button"

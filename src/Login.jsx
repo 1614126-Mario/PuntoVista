@@ -17,7 +17,7 @@ import {
 import authService from './services/authService'
 import './Login.css'
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onVolver }) {
   const [username, setUsername] = useState('cajero')
   const [password, setPassword] = useState('cajero123')
   const [showPassword, setShowPassword] = useState(false)
@@ -164,6 +164,12 @@ export default function Login({ onLogin }) {
       <div className="login-bg-glow glow-bottom-right" />
       <div className="login-bg-glow glow-center" />
       <div className="login-grid-overlay" />
+
+      {onVolver && (
+        <button type="button" className="login-back-shop" onClick={onVolver}>
+          ← Ir a la tienda en línea
+        </button>
+      )}
 
       {/* Contenedor de la tarjeta de Login */}
       <div className="login-container">

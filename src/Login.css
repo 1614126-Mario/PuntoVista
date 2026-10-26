@@ -615,3 +615,22 @@
     grid-template-columns: 1fr;
   }
 }
+
+.login-back-shop {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(19, 15, 36, 0.85);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-purple);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.login-back-shop:hover {
+  border-color: var(--purple-400);
+}
