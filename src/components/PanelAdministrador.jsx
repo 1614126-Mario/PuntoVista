@@ -345,14 +345,14 @@ export default function PanelAdministrador({
                         </strong>
                       </td>
                       <td>
-                        <div style={{ fontSize: '0.8rem' }}>{fecha.toLocaleDateString('es-MX')}</div>
+                        <div style={{ fontSize: '0.8rem' }}>{fecha.toLocaleDateString('es-SV')}</div>
                         <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>
-                          {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                          {fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </td>
                       <td>
                         <div>{v.cliente ? `${v.cliente.nombre} ${v.cliente.apellido || ''}` : 'Consumidor Final'}</div>
-                        <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{v.cliente?.documento || 'RFC Genérico'}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{v.cliente?.documento || 'DUI: 00000000-0'}</div>
                       </td>
                       <td>
                         <span className="badge-modality-small">

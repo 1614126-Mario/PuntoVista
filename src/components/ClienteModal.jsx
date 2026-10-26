@@ -58,7 +58,7 @@ export default function ClienteModal({
       const nuevo = await onCrearCliente({
         nombre: formData.nombre.trim(),
         apellido: formData.apellido.trim(),
-        documento: formData.documento.trim() || 'XAXX010101000',
+        documento: formData.documento.trim() || '00000000-0',
         telefono: formData.telefono.trim(),
         email: formData.email.trim(),
         direccion: formData.direccion.trim()
@@ -275,16 +275,16 @@ export default function ClienteModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="form-group">
-                  <label>RFC / Documento Fiscal / NIT</label>
+                  <label>DUI / NIT (Documento de Identidad) *</label>
                   <input
                     type="text"
-                    placeholder="Ej: MEML940312XX1 o XAXX010101000"
+                    placeholder="Ej: 01234567-8 o 0614-..."
                     className="form-control"
                     value={formData.documento}
                     onChange={(e) => setFormData({ ...formData, documento: e.target.value.toUpperCase() })}
                   />
                   <small style={{ fontSize: '0.7rem', color: '#9ca3af' }}>
-                    Indispensable si requiere Factura Fiscal
+                    Documento para Factura Electrónica (DTE) de El Salvador
                   </small>
                 </div>
 
@@ -292,7 +292,7 @@ export default function ClienteModal({
                   <label>Teléfono de Contacto</label>
                   <input
                     type="tel"
-                    placeholder="Ej: 55 1234 5678"
+                    placeholder="Ej: +503 7123-4567"
                     className="form-control"
                     value={formData.telefono}
                     onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}

@@ -25,7 +25,9 @@ import {
   MapPin,
   Phone,
   TrendingUp,
-  Package
+  Package,
+  ChevronRight,
+  ShoppingCart
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from './data/initialProducts'
 import Login from './Login'
@@ -98,6 +100,7 @@ export default function App() {
 
   // Modales adicionales
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
 
   // Notificación Toast
   const [toast, setToast] = useState(null)
@@ -317,7 +320,7 @@ export default function App() {
   // --- CÁLCULOS FINANCIEROS DEL CARRITO ---
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
   const totalItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0)
-  const tax = Number((subtotal * 0.16).toFixed(2)) // 16% IVA
+  const tax = Number((subtotal * 0.13).toFixed(2)) // 13% IVA El Salvador
   const grandTotal = Number((subtotal + tax).toFixed(2))
 
   // =========================================================
@@ -329,9 +332,9 @@ export default function App() {
     const clienteAsignado = selectedCliente || {
       nombre: 'Consumidor',
       apellido: 'Final',
-      documento: 'XAXX010101000',
-      telefono: '555-000-0000',
-      email: 'ventas@nocturnagrill.com',
+      documento: '00000000-0',
+      telefono: '+503 2200-0000',
+      email: 'ventas@tabernamorenazos.sv',
       direccion: 'Consumo en barra / mostrador'
     }
 
@@ -368,15 +371,15 @@ export default function App() {
       // Completar objeto para el modal de Factura con datos de presentación
       const facturaData = {
         ...ventaRegistrada,
-        folio: ventaRegistrada.numeroFactura || `FAC-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
+        folio: ventaRegistrada.numeroFactura || `DTE-01-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
         numeroFactura: ventaRegistrada.numeroFactura,
-        date: new Date().toLocaleDateString('es-MX', {
+        date: new Date().toLocaleDateString('es-SV', {
           weekday: 'long',
           year: 'numeric',
           month: 'short',
           day: 'numeric'
         }),
-        time: new Date().toLocaleTimeString('es-MX', {
+        time: new Date().toLocaleTimeString('es-SV', {
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit'
@@ -406,6 +409,7 @@ export default function App() {
       // Vaciar carrito y resetear notas para la siguiente orden
       setCart([])
       setOrderNotes('')
+      setIsMobileCartOpen(false)
 
       showToast('¡Orden cobrada y Factura generada con éxito!', 'success')
     } catch (err) {
@@ -464,6 +468,7 @@ export default function App() {
       setVentas(prev => [dataFinal, ...prev])
       setCart([])
       setOrderNotes('')
+      setIsMobileCartOpen(false)
       showToast(`¡Comanda enviada con éxito para ${orderType === 'LOCAL' ? tableNumber : 'Entrega'}! Pasa a Caja para su cobro.`, 'success')
       setActiveView('mesero')
     } catch (err) {
@@ -853,7 +858,7 @@ export default function App() {
           </section>
 
           {/* SECCIÓN DERECHA: TICKET DE VENTA CON CLIENTE Y FACTURACIÓN */}
-          <aside className="order-sidebar">
+          <aside className={`order-sidebar ${isMobileCartOpen ? 'mobile-cart-active' : ''}`}>
             {/* Header del Ticket */}
             <div className="order-header">
               <div className="order-header-top">
@@ -865,8 +870,8 @@ export default function App() {
                   )}
                 </div>
 
-                {cart.length > 0 && (
-                  <div className="order-header-actions">
+                <div className="order-header-actions">
+                  {cart.length > 0 && (
                     <button
                       onClick={clearCart}
                       className="btn-clear-cart"
@@ -875,8 +880,17 @@ export default function App() {
                       <Trash2 size={14} />
                       <span>Vaciar</span>
                     </button>
-                  </div>
-                )}
+                  )}
+                  <button
+                    type="button"
+                    className="btn-close-mobile-cart"
+                    onClick={() => setIsMobileCartOpen(false)}
+                    title="Cerrar ticket y volver al catálogo"
+                  >
+                    <X size={18} />
+                    <span>Volver</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -932,7 +946,7 @@ export default function App() {
                         {selectedCliente ? `${selectedCliente.nombre} ${selectedCliente.apellido || ''}` : 'Consumidor Final'}
                       </div>
                       <div className="client-rfc-sub">
-                        {selectedCliente?.documento ? `RFC: ${selectedCliente.documento}` : 'Sin RFC asignado'}
+                        {selectedCliente?.documento ? `DUI/NIT: ${selectedCliente.documento}` : 'Sin DUI/NIT asignado'}
                       </div>
                     </div>
                   </div>
@@ -1073,7 +1087,7 @@ export default function App() {
               </div>
               <div className="summary-line">
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Percent size={13} /> IVA (16% Fiscal)
+                  <Percent size={13} /> IVA (13% Fiscal)
                 </span>
                 <span>${tax.toFixed(2)}</span>
               </div>
@@ -1160,6 +1174,28 @@ export default function App() {
               )}
             </div>
           </aside>
+
+          {/* Barra inferior fija flotante para celulares */}
+          {!isMobileCartOpen && (
+            <div className="mobile-cart-bottom-bar" onClick={() => setIsMobileCartOpen(true)}>
+              <div className="mobile-cart-bar-left">
+                <div className="mobile-cart-icon-bubble">
+                  <ShoppingCart size={18} />
+                  {totalItemsCount > 0 && <span className="mobile-cart-num">{totalItemsCount}</span>}
+                </div>
+                <div>
+                  <div className="mobile-cart-bar-title">
+                    {totalItemsCount === 0 ? 'Ticket Vacío' : `${totalItemsCount} producto(s) en orden`}
+                  </div>
+                  <div className="mobile-cart-bar-sub">Toca para revisar o cobrar</div>
+                </div>
+              </div>
+              <div className="mobile-cart-bar-right">
+                <span className="mobile-cart-bar-price">${grandTotal.toFixed(2)} USD</span>
+                <ChevronRight size={18} />
+              </div>
+            </div>
+          )}
         </main>
       )}
 
@@ -1323,13 +1359,13 @@ export default function App() {
                 </div>
 
                 <div className="form-group">
-                  <label>Precio de Venta ($ MXN) *</label>
+                  <label>Precio de Venta ($ USD) *</label>
                   <input
                     type="number"
-                    step="0.5"
-                    min="1"
+                    step="0.25"
+                    min="0.25"
                     required
-                    placeholder="Ej: 120.00"
+                    placeholder="Ej: 4.50"
                     className="form-control"
                     value={newProduct.price}
                     onChange={(e) =>

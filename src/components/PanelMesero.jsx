@@ -210,7 +210,7 @@ export default function PanelMesero({
                       {pedido.numeroFactura || pedido.folio || `ORD-${pedido.id}`}
                     </span>
                     <div style={{ fontSize: '0.74rem', color: '#9ca3af', marginTop: '2px' }}>
-                      {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} • {fecha.toLocaleDateString('es-MX')}
+                      {fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })} • {fecha.toLocaleDateString('es-SV')}
                     </div>
                   </div>
 

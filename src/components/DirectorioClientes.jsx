@@ -36,7 +36,7 @@ export default function DirectorioClientes({
             <input
               type="text"
               className="search-input"
-              placeholder="Buscar cliente por nombre, RFC, teléfono, correo o dirección..."
+              placeholder="Buscar cliente por nombre, DUI / NIT, teléfono, correo o dirección..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -68,7 +68,7 @@ export default function DirectorioClientes({
                   {c.nombre} {c.apellido || ''}
                 </h4>
                 <div style={{ fontSize: '0.78rem', color: '#c084fc', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <FileText size={12} /> {c.documento ? `RFC: ${c.documento}` : 'Sin RFC asignado'}
+                  <FileText size={12} /> {c.documento ? `DUI/NIT: ${c.documento}` : 'Sin documento asignado'}
                 </div>
               </div>
             </div>

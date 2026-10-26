@@ -1,9 +1,9 @@
 /**
- * Convierte un número en formato moneda a texto en español
- * Ejemplo: 423.40 -> "CUATROCIENTOS VEINTITRÉS PESOS 40/100 M.N."
+ * Convierte un número en formato moneda a texto en español (Dólares USD - El Salvador)
+ * Ejemplo: 25.40 -> "VEINTICINCO DÓLARES CON 40/100 USD"
  */
 export function numeroALetras(monto) {
-  if (isNaN(monto) || monto === null) return 'CERO PESOS 00/100 M.N.'
+  if (isNaN(monto) || monto === null) return 'CERO DÓLARES CON 00/100 USD'
 
   const unidades = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE']
   const decenas = [
@@ -26,7 +26,7 @@ export function numeroALetras(monto) {
   const centavos = partes[1] || '00'
 
   if (entero === 0) {
-    return `CERO PESOS ${centavos}/100 M.N.`
+    return `CERO DÓLARES CON ${centavos}/100 USD`
   }
 
   function convertirGrupo(n) {
@@ -72,6 +72,6 @@ export function numeroALetras(monto) {
     resultado += convertirGrupo(entero) + ' '
   }
 
-  const textoPesos = parseInt(partes[0], 10) === 1 ? 'PESO' : 'PESOS'
-  return `${resultado.trim()} ${textoPesos} ${centavos}/100 M.N.`
+  const textoDolares = parseInt(partes[0], 10) === 1 ? 'DÓLAR' : 'DÓLARES'
+  return `${resultado.trim()} ${textoDolares} CON ${centavos}/100 USD`
 }

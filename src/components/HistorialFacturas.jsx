@@ -102,7 +102,7 @@ export default function HistorialFacturas({
             <input
               type="text"
               className="search-input"
-              placeholder="Buscar por folio de factura, nombre de cliente, RFC o mesa..."
+              placeholder="Buscar por folio de factura, nombre de cliente, DUI/NIT o mesa..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -227,7 +227,7 @@ export default function HistorialFacturas({
                         {venta.cliente ? `${venta.cliente.nombre} ${venta.cliente.apellido || ''}` : 'Consumidor Final'}
                       </strong>
                       <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                        {venta.cliente?.documento ? `RFC: ${venta.cliente.documento}` : 'RFC Genérico'}
+                        {venta.cliente?.documento ? `DUI/NIT: ${venta.cliente.documento}` : 'DUI: 00000000-0'}
                       </div>
                     </div>
                   </div>
@@ -241,10 +241,10 @@ export default function HistorialFacturas({
 
                   <div className="invoice-datetime-row">
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Calendar size={13} /> {fecha.toLocaleDateString('es-MX')}
+                      <Calendar size={13} /> {fecha.toLocaleDateString('es-SV')}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Clock size={13} /> {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                      <Clock size={13} /> {fecha.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <span>{cantItems} art(s).</span>
                   </div>
@@ -268,7 +268,7 @@ export default function HistorialFacturas({
                   <div className="invoice-price-block">
                     <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>TOTAL DEL PEDIDO</span>
                     <div className="invoice-total-number">
-                      ${Number(venta.total || 0).toFixed(2)} <small>MXN</small>
+                      ${Number(venta.total || 0).toFixed(2)} <small>USD</small>
                     </div>
                   </div>
 

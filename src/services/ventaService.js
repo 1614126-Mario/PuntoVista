@@ -61,7 +61,7 @@ export const ventaService = {
 
     // Fallback local: generar folio y totales
     const subtotal = ventaData.detalles.reduce((acc, it) => acc + (it.precioUnitario * it.cantidad), 0)
-    const iva = Number((subtotal * 0.16).toFixed(2))
+    const iva = Number((subtotal * 0.13).toFixed(2)) // 13% IVA El Salvador
     const total = Number((subtotal + iva).toFixed(2))
 
     const guardadaLocal = {
