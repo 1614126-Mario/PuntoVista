@@ -716,3 +716,124 @@
     padding-bottom: 5rem;
   }
 }
+
+/* ===== Ajustes responsive adicionales de la tienda ===== */
+.shop-cart {
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 900px) {
+  .shop-cart {
+    height: 100vh;
+    height: 100dvh;
+    padding-bottom: 5rem;
+  }
+
+  /* 16px evita el zoom automático de iOS al enfocar un campo */
+  .shop-input,
+  .shop-search input {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .shop-container {
+    padding: 0.75rem 0.75rem 5.5rem;
+  }
+
+  .shop-header-inner {
+    padding: 0.55rem 0.75rem;
+  }
+
+  .shop-brand h1 {
+    font-size: 0.92rem;
+  }
+
+  .shop-brand p {
+    display: none;
+  }
+
+  .shop-hero h2 {
+    font-size: 1.25rem;
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .shop-card-body {
+    padding: 0.55rem;
+  }
+
+  .shop-card-body h3 {
+    font-size: 0.85rem;
+  }
+
+  .shop-card-body p {
+    display: none;
+  }
+
+  .shop-card-foot {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .shop-card-foot strong {
+    font-size: 1rem;
+  }
+
+  .shop-card-foot .shop-btn-primary {
+    flex: 1;
+    padding: 0.45rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  .shop-tabs {
+    width: 100%;
+  }
+
+  .shop-tab {
+    flex: 1;
+  }
+
+  .shop-search-folio {
+    flex-direction: column;
+  }
+
+  .shop-modal {
+    padding: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* En pantallas muy angostas los botones del encabezado quedan solo con icono */
+  .shop-header-actions .shop-btn-ghost span:not(.shop-count) {
+    display: none;
+  }
+
+  .shop-header-actions .shop-btn-ghost {
+    padding: 0.5rem 0.65rem;
+  }
+}
+
+/* Evita que el contenido ensanche la columna y genere scroll horizontal */
+.shop-catalog,
+.shop-layout > * {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .shop-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.shop-page {
+  overflow-x: hidden;
+}
+
+/* Todas las imágenes del menú con la misma proporción */
+.shop-card-img {
+  overflow: hidden;
+}

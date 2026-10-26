@@ -248,7 +248,7 @@ export default function ClienteModal({
           ) : (
             /* Formulario para registrar un cliente nuevo */
             <form onSubmit={handleFormSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="form-two-cols">
                 <div className="form-group">
                   <label>Nombre(s) *</label>
                   <input
@@ -273,7 +273,7 @@ export default function ClienteModal({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="form-two-cols">
                 <div className="form-group">
                   <label>DUI / NIT (Documento de Identidad) *</label>
                   <input

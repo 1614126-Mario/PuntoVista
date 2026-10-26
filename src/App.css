@@ -3552,3 +3552,205 @@
 .payment-change.short {
   color: #f87171;
 }
+
+/* ========================================================= */
+/* AJUSTES RESPONSIVE ADICIONALES (celulares y tablets)      */
+/* ========================================================= */
+
+/* Las cuadrículas nunca exigen más ancho del que tiene la pantalla */
+.products-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+}
+.metrics-cards-grid,
+.waiter-kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+}
+.invoices-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+}
+.clients-directory-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+}
+.waiter-orders-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+}
+.admin-split-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+}
+
+.form-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.invoice-delivery-address > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.invoice-card-footer {
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Modales: nunca más altos que la pantalla; el cuerpo hace scroll */
+.modal-content {
+  max-height: 92vh;
+  max-height: 92dvh;
+}
+.modal-content .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+.modal-header,
+.modal-footer {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .modal-backdrop {
+    padding: 0.6rem;
+  }
+
+  .modal-content .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+    padding: 0.8rem 1rem;
+  }
+
+  .modal-footer > button {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+
+  .form-two-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .panel-card-header .search-box {
+    max-width: none !important;
+  }
+
+  .waiter-header-card .btn-add-product,
+  .admin-header-card .btn-add-product {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Pie de las tarjetas de factura: botones a todo el ancho */
+  .invoice-card-footer > div:last-child {
+    width: 100%;
+  }
+
+  .invoice-card-footer .btn-add-product,
+  .invoice-card-footer .btn-view-invoice {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Filtros del historial/mesero en una sola fila con scroll horizontal */
+  .history-filter-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .history-filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Botones del encabezado (ej. "Por cobrar") más compactos */
+  .header-actions .tab-btn {
+    padding: 0.28rem 0.5rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .payment-details {
+    max-height: 190px;
+  }
+}
+
+@media (max-width: 380px) {
+  .payment-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Formularios que envuelven cuerpo y pie del modal: mantienen el scroll interno */
+.modal-content > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Icono de las tarjetas de resumen del mesero: caja fija con margen */
+.kpi-icon-box {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waiter-kpi-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.waiter-kpi-card > div:last-child {
+  min-width: 0;
+}
+
+/* El catálogo del POS no puede ser más ancho que la pantalla */
+.catalog-section,
+.pos-layout > * {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .pos-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi-icon-box,
+  .metric-icon-box {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 420px) {
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
