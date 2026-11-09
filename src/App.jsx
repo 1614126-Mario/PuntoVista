@@ -27,7 +27,9 @@ import {
   TrendingUp,
   Package,
   ChevronRight,
-  ShoppingCart
+  ShoppingCart,
+  ChefHat,
+  Flame
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from './data/initialProducts'
 import { PAYMENT_LABELS } from './data/paymentInfo'
@@ -45,6 +47,7 @@ import DirectorioClientes from './components/DirectorioClientes'
 import PanelAdministrador from './components/PanelAdministrador'
 import PanelMesero from './components/PanelMesero'
 import TablaUsuarios from './components/TablaUsuarios'
+import PantallaCocina from './components/PantallaCocina'
 import Boton from './components/Boton'
 import ConfirmModal from './components/ConfirmModal'
 import './App.css'
@@ -667,6 +670,14 @@ export default function App() {
                   <Plus size={16} />
                   <span>+ Tomar Pedido</span>
                 </button>
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'cocina' ? 'active' : ''}`}
+                  onClick={() => setActiveView('cocina')}
+                >
+                  <ChefHat size={16} />
+                  <span>Cocina</span>
+                </button>
               </>
             )}
 
@@ -762,6 +773,14 @@ export default function App() {
                 >
                   <Users size={16} />
                   <span>Usuarios</span>
+                </button>
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'cocina' ? 'active' : ''}`}
+                  onClick={() => setActiveView('cocina')}
+                >
+                  <ChefHat size={16} />
+                  <span>Cocina (KDS)</span>
                 </button>
               </>
             )}
