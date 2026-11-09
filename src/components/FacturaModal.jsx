@@ -151,7 +151,7 @@ export default function FacturaModal({
     <p class="meta-p"><strong>Código de Generación (UUID):</strong> ${codigoGeneracionUUID}</p>
     <p class="meta-p"><strong>Fecha y Hora:</strong> ${fechaTexto} ${horaTexto}</p>
     <p class="meta-p"><strong>Cliente / Receptor:</strong> ${cliente ? `${cliente.nombre} ${cliente.apellido || ''} (DUI/NIT: ${cliente.documento || '00000000-0'})` : 'Consumidor Final (DUI: 00000000-0)'}</p>
-    <p class="meta-p"><strong>Modalidad:</strong> ${tipoPedido === 'EN_LINEA' ? 'Pedido en Línea / Delivery' : tipoPedido === 'LOCAL' ? `Consumo en Restaurante (${numeroMesa || 'Salón'})` : 'Para Llevar'}</p>
+    <p class="meta-p"><strong>Modalidad:</strong> ${tipoPedido === 'EN_LINEA' ? 'Pedido en Línea / Delivery' : tipoPedido === 'LOCAL' ? `Mesa Aperturada (${numeroMesa || 'Mesa 1'})` : 'Para Llevar'}</p>
   </div>
   <table>
     <thead>
@@ -327,7 +327,7 @@ export default function FacturaModal({
                         </>
                       ) : tipoPedido === 'LOCAL' ? (
                         <>
-                          <Utensils size={13} /> Consumo en Restaurante {numeroMesa ? `(${numeroMesa})` : ''}
+                          <Utensils size={13} /> Mesa Aperturada: {numeroMesa || 'Mesa 1'}
                         </>
                       ) : (
                         <>
@@ -508,7 +508,7 @@ export default function FacturaModal({
                 {tipoPedido === 'EN_LINEA'
                   ? '🛵 PEDIDO EN LÍNEA / DELIVERY'
                   : tipoPedido === 'LOCAL'
-                  ? `🍽️ CONSUMO EN MESA (${numeroMesa || 'SALÓN'})`
+                  ? `🍽️ MESA APERTURADA (${numeroMesa || 'MESA 1'}) - CUENTA COBRADA`
                   : '🛍️ PARA LLEVAR'}
               </p>
             </div>

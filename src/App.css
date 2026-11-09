@@ -3754,3 +3754,139 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* ========================================================= */
+/* APERTURA DE MESA Y CUENTA                                 */
+/* ========================================================= */
+.apertura-mesa-card {
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.apertura-mesa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.apertura-mesa-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.badge-mesa-activa {
+  background: #064e3b;
+  color: #a7f3d0;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+}
+
+.subfield-label {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  margin-bottom: 0.15rem;
+  display: block;
+}
+
+.quick-mesas-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+}
+
+.btn-quick-mesa {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d1d5db;
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 0.35rem 0.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.btn-quick-mesa:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #34d399;
+  color: #fff;
+}
+
+.btn-quick-mesa.selected {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  font-weight: 700;
+}
+
+.mesa-custom-input-box {
+  margin-top: 0.1rem;
+}
+
+.mesa-cuenta-resumen {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.15rem;
+}
+
+.mesa-cuenta-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.mesa-cuenta-col.text-right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.mesa-cuenta-col .lbl-muted {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mesa-cuenta-col .val-mesa {
+  font-size: 0.88rem;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.mesa-cuenta-col .val-cuenta {
+  font-size: 1.05rem;
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+.mesa-aperturada-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dest-cuenta-tag {
+  font-size: 0.78rem;
+  color: #fbbf24;
+  font-weight: 600;
+}

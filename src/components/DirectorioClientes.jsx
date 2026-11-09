@@ -10,11 +10,13 @@ import {
   Utensils,
   Receipt
 } from 'lucide-react'
+import Boton from './Boton'
 
 export default function DirectorioClientes({
   clientes = [],
   onNuevoClienteClick,
-  onIniciarPedidoConCliente
+  onIniciarPedidoConCliente,
+  onEliminarCliente
 }) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -94,16 +96,23 @@ export default function DirectorioClientes({
               )}
             </div>
 
-            <div className="client-card-bottom-action">
+            <div className="client-card-bottom-action" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="btn-add-product"
-                style={{ width: '100%', justifyContent: 'center' }}
+                style={{ flex: 1, minWidth: '180px', justifyContent: 'center' }}
                 onClick={() => onIniciarPedidoConCliente(c)}
               >
                 <Utensils size={15} />
-                <span>Tomar Pedido para este Cliente</span>
+                <span>Tomar Pedido</span>
               </button>
+              {onEliminarCliente && (
+                <Boton
+                  texto="Eliminar cliente"
+                  color="#b91010"
+                  onClick={() => onEliminarCliente(c)}
+                />
+              )}
             </div>
           </div>
         ))}

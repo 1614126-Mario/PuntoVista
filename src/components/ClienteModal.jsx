@@ -23,6 +23,7 @@ export default function ClienteModal({
   const [tab, setTab] = useState('buscar') // 'buscar' | 'nuevo'
   const [searchQuery, setSearchQuery] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMsg, setErrorMsg] = useState(null)
 
   // Formulario nuevo cliente
   const [formData, setFormData] = useState({
@@ -49,7 +50,7 @@ export default function ClienteModal({
   const handleFormSubmit = async (e) => {
     e.preventDefault()
     if (!formData.nombre.trim()) {
-      alert('Por favor introduce al menos el nombre del cliente.')
+      setErrorMsg('Por favor introduce al menos el nombre del cliente.')
       return
     }
 
@@ -75,7 +76,7 @@ export default function ClienteModal({
       setTab('buscar')
       onClose()
     } catch (err) {
-      alert('Error al registrar el cliente: ' + err.message)
+      setErrorMsg('Error al registrar el cliente: ' + err.message)
     } finally {
       setIsSubmitting(false)
     }
@@ -248,6 +249,19 @@ export default function ClienteModal({
           ) : (
             /* Formulario para registrar un cliente nuevo */
             <form onSubmit={handleFormSubmit}>
+              {errorMsg && (
+                <div style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  color: '#f87171',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  marginBottom: '1rem'
+                }}>
+                  {errorMsg}
+                </div>
+              )}
               <div className="form-two-cols">
                 <div className="form-group">
                   <label>Nombre(s) *</label>

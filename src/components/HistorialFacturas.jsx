@@ -89,7 +89,7 @@ export default function HistorialFacturas({
             <Utensils size={22} color="#4ade80" />
           </div>
           <div>
-            <span className="metric-label">Consumo en Restaurante</span>
+            <span className="metric-label">Mesas Aperturadas</span>
             <h3 className="metric-value">{pedidosLocales}</h3>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function HistorialFacturas({
             className={`filter-pill ${filterTipo === 'LOCAL' ? 'active' : ''}`}
             onClick={() => setFilterTipo('LOCAL')}
           >
-            <Utensils size={14} /> Consumo en Local / Comedor ({pedidosLocales})
+            <Utensils size={14} /> Mesas Aperturadas ({pedidosLocales})
           </button>
           <button
             type="button"
@@ -221,7 +221,7 @@ export default function HistorialFacturas({
                         </>
                       ) : isLocal ? (
                         <>
-                          <Utensils size={12} /> Consumo en Local {venta.numeroMesa ? `(${venta.numeroMesa})` : ''}
+                          <Utensils size={12} /> Mesa Aperturada: {venta.numeroMesa || 'Mesa 1'}
                         </>
                       ) : (
                         <>
@@ -285,7 +285,7 @@ export default function HistorialFacturas({
 
                 <div className="invoice-card-footer">
                   <div className="invoice-price-block">
-                    <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>TOTAL DEL PEDIDO</span>
+                    <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{isLocal ? `CUENTA (${venta.numeroMesa || 'MESA'})` : 'TOTAL DEL PEDIDO'}</span>
                     <div className="invoice-total-number">
                       ${Number(venta.total || 0).toFixed(2)} <small>USD</small>
                     </div>

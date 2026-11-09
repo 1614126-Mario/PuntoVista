@@ -72,7 +72,7 @@ export default function PanelMesero({
           style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}
         >
           <Plus size={18} strokeWidth={2.5} />
-          <span>+ Tomar Nuevo Pedido</span>
+          <span>+ Aperturar Mesa / Pedido</span>
         </button>
       </div>
 
@@ -93,7 +93,7 @@ export default function PanelMesero({
             <Utensils size={22} color="#4ade80" />
           </div>
           <div>
-            <span className="waiter-kpi-lbl">Entregas en Mesa (Salón)</span>
+            <span className="waiter-kpi-lbl">Mesas Aperturadas</span>
             <h3 className="waiter-kpi-val">{pedidosLocal}</h3>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function PanelMesero({
             className={`filter-pill ${filterTab === 'LOCAL' ? 'active' : ''}`}
             onClick={() => setFilterTab('LOCAL')}
           >
-            <Utensils size={14} /> En Mesas ({pedidosLocal})
+            <Utensils size={14} /> Mesas Aperturadas ({pedidosLocal})
           </button>
           <button
             type="button"
@@ -227,9 +227,14 @@ export default function PanelMesero({
                   </div>
                   <div className="destination-value">
                     {isLocal && (
-                      <span className="dest-mesa">
-                        🍽️ {pedido.numeroMesa || 'Mesa 1 (Salón)'}
-                      </span>
+                      <div className="mesa-aperturada-pill">
+                        <span className="dest-mesa">
+                          🍽️ {pedido.numeroMesa || 'Mesa 1'} (Mesa Aperturada)
+                        </span>
+                        <span className="dest-cuenta-tag">
+                          Cuenta a cobrar: ${Number(pedido.total || 0).toFixed(2)}
+                        </span>
+                      </div>
                     )}
                     {isOnline && (
                       <span className="dest-delivery">
@@ -276,7 +281,7 @@ export default function PanelMesero({
                 {/* TOTAL */}
                 <div className="waiter-order-footer">
                   <div>
-                    <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>TOTAL DEL PEDIDO</span>
+                    <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{isLocal ? `CUENTA A COBRAR (${pedido.numeroMesa || 'MESA'})` : 'TOTAL DEL PEDIDO'}</span>
                     <div style={{ fontSize: '1.1rem', fontWeight: '800', color: debe ? '#fbbf24' : '#fff' }}>
                       ${Number(pedido.total || 0).toFixed(2)}
                     </div>

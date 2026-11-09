@@ -30,6 +30,7 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
   const total = Number(pedido.total || 0)
   const items = pedido.detalles || pedido.items || []
   const esLinea = pedido.tipoPedido === 'EN_LINEA'
+  const esMesa = !pedido.tipoPedido || pedido.tipoPedido === 'LOCAL'
   const destino = esLinea
     ? pedido.direccionEntrega || pedido.cliente?.direccion || 'Dirección no especificada'
     : pedido.numeroMesa || (pedido.tipoPedido === 'LLEVAR' ? 'Para llevar (mostrador)' : 'Salón')
@@ -68,7 +69,7 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
             <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', marginBottom: 6 }}>
               <MapPin size={14} color="#38bdf8" style={{ marginTop: 2, flexShrink: 0 }} />
               <span>
-                <strong>{esLinea ? 'Entregar en:' : 'Lugar:'}</strong> {destino}
+                <strong>{esLinea ? 'Entregar en:' : esMesa ? 'Mesa correspondiente:' : 'Lugar:'}</strong> <span style={{ color: esMesa ? '#34d399' : '#fff', fontWeight: esMesa ? '700' : 'normal' }}>{destino}</span>
               </span>
             </div>
             <ul style={{ margin: '0 0 6px', paddingLeft: '1.1rem', color: '#d1d5db' }}>
@@ -79,7 +80,7 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
               ))}
             </ul>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fbbf24' }}>
-              Total a cobrar: ${total.toFixed(2)}
+              {esMesa ? `Cuenta a cobrar (${destino}): ` : 'Total a cobrar: '}${total.toFixed(2)}
             </div>
           </div>
 

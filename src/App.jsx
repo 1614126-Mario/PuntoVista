@@ -44,6 +44,9 @@ import HistorialFacturas from './components/HistorialFacturas'
 import DirectorioClientes from './components/DirectorioClientes'
 import PanelAdministrador from './components/PanelAdministrador'
 import PanelMesero from './components/PanelMesero'
+import TablaUsuarios from './components/TablaUsuarios'
+import Boton from './components/Boton'
+import ConfirmModal from './components/ConfirmModal'
 import './App.css'
 
 export default function App() {
@@ -64,6 +67,7 @@ export default function App() {
   // Cobro de pedidos pendientes (modal) y filtro con el que se abre el historial
   const [pedidoACobrar, setPedidoACobrar] = useState(null)
   const [historialFiltro, setHistorialFiltro] = useState('ALL')
+  const [clienteAEliminar, setClienteAEliminar] = useState(null)
 
   const irALogin = () => {
     window.location.hash = '#/login'
@@ -238,10 +242,11 @@ export default function App() {
   const avisarSiNoLlegoAlServidor = (venta) => {
     setServidorEstado(ventaService.estadoServidor)
     if (venta?.soloLocal) {
-      alert(
+      showToast(
         ventaService.estadoServidor === 'sin_sesion'
-          ? 'ATENCIÓN: este pedido NO llegó al servidor porque tu sesión con el backend venció o no es válida. Caja no lo verá.\n\nCierra sesión, vuelve a ingresar y registra el pedido otra vez.'
-          : 'ATENCIÓN: este pedido NO llegó al servidor (sin conexión con el backend). Caja no lo verá.\n\nVerifica que el backend esté encendido y vuelve a registrar el pedido.'
+          ? 'Sesión con el backend vencida. Vuelve a iniciar sesión.'
+          : 'Sin conexión con el backend. Pedido guardado solo localmente.',
+        'danger'
       )
     }
   }
@@ -270,6 +275,26 @@ export default function App() {
     showToast(`Listo para tomar la orden de ${cliente.nombre}`, 'success')
   }
 
+  // Solicitar eliminación de cliente (abre modal de confirmación visual)
+  const handleSolicitarEliminarCliente = (cliente) => {
+    setClienteAEliminar(cliente)
+  }
+
+  // Confirmar y procesar la eliminación del cliente
+  const handleConfirmarEliminarCliente = () => {
+    if (!clienteAEliminar) return
+    const id = clienteAEliminar.id
+    const nombre = `${clienteAEliminar.nombre} ${clienteAEliminar.apellido || ''}`.trim()
+    const actualizados = clientes.filter((c) => c.id !== id)
+    setClientes(actualizados)
+    localStorage.setItem('nocturna_clientes', JSON.stringify(actualizados))
+    if (selectedCliente?.id === id) {
+      setSelectedCliente(null)
+    }
+    showToast(`Cliente "${nombre}" eliminado con éxito`, 'danger')
+    setClienteAEliminar(null)
+  }
+
   // Inicio y Cierre de Sesión
   const handleLogin = (user, remember) => {
     setCurrentUser(user)
@@ -288,17 +313,15 @@ export default function App() {
   }
 
   const handleLogout = async () => {
-    if (window.confirm('¿Seguro que deseas cerrar la sesión actual?')) {
-      try {
-        await authService.logout()
-      } catch (err) {
-        console.warn('Error al cerrar sesión en el backend:', err)
-      }
-      setCurrentUser(null)
-      setShowLogin(true)
-      localStorage.removeItem('nocturna_user')
-      showToast('Sesión cerrada con éxito', 'danger')
+    try {
+      await authService.logout()
+    } catch (err) {
+      console.warn('Error al cerrar sesión en el backend:', err)
     }
+    setCurrentUser(null)
+    setShowLogin(true)
+    localStorage.removeItem('nocturna_user')
+    showToast('Sesión cerrada con éxito', 'danger')
   }
 
   // --- ACCIONES DE CARRITO ---
@@ -336,32 +359,26 @@ export default function App() {
 
   const clearCart = () => {
     if (cart.length === 0) return
-    if (window.confirm('¿Deseas vaciar todo el pedido actual?')) {
-      setCart([])
-      showToast('Pedido vaciado', 'danger')
-    }
+    setCart([])
+    showToast('Pedido vaciado', 'danger')
   }
 
   // --- ACCIONES DE CATÁLOGO ---
   const deleteProductFromMenu = (productId, productName) => {
-    if (window.confirm(`¿Seguro que deseas eliminar "${productName}" del menú?`)) {
-      setProducts((prev) => prev.filter((p) => p.id !== productId))
-      setCart((prev) => prev.filter((p) => p.id !== productId))
-      showToast(`"${productName}" fue eliminado del catálogo`, 'danger')
-    }
+    setProducts((prev) => prev.filter((p) => p.id !== productId))
+    setCart((prev) => prev.filter((p) => p.id !== productId))
+    showToast(`"${productName}" fue eliminado del catálogo`, 'danger')
   }
 
   const restoreDefaultProducts = () => {
-    if (window.confirm('¿Restablecer el menú inicial con comidas y bebidas?')) {
-      setProducts(INITIAL_PRODUCTS)
-      showToast('Menú restaurado con éxito', 'success')
-    }
+    setProducts(INITIAL_PRODUCTS)
+    showToast('Menú restaurado con éxito', 'success')
   }
 
   const handleCreateProduct = (e) => {
     e.preventDefault()
     if (!newProduct.name || !newProduct.price) {
-      alert('Por favor indica nombre y precio del producto')
+      showToast('Por favor indica nombre y precio del producto', 'danger')
       return
     }
 
@@ -498,9 +515,9 @@ export default function App() {
       setOrderNotes('')
       setIsMobileCartOpen(false)
 
-      showToast('¡Orden cobrada y Factura generada con éxito!', 'success')
+      showToast(orderType === 'LOCAL' ? `¡Cuenta de ${tableNumber} (${grandTotal.toFixed(2)}) cobrada con éxito!` : '¡Orden cobrada y Factura generada con éxito!', 'success')
     } catch (err) {
-      alert('Error al generar la venta y factura: ' + err.message)
+      showToast('Error al generar la venta y factura: ' + err.message, 'danger')
     }
   }
 
@@ -557,10 +574,10 @@ export default function App() {
       setCart([])
       setOrderNotes('')
       setIsMobileCartOpen(false)
-      showToast(`¡Comanda enviada con éxito para ${orderType === 'LOCAL' ? tableNumber : 'Entrega'}! Pasa a Caja para su cobro.`, 'success')
+      showToast(orderType === 'LOCAL' ? `¡Mesa ${tableNumber} aperturada con éxito! Cuenta a cobrar: ${grandTotal.toFixed(2)}. Comanda enviada a cocina.` : '¡Comanda enviada con éxito para Entrega! Pasa a Caja para su cobro.', 'success')
       setActiveView('mesero')
     } catch (err) {
-      alert('Error registrando comanda: ' + err.message)
+      showToast('Error registrando comanda: ' + err.message, 'danger')
     }
   }
 
@@ -588,7 +605,7 @@ export default function App() {
       setIsFacturaModalOpen(true)
       showToast(`¡Pedido ${pedido.numeroFactura || pedido.folio} cobrado exitosamente! Factura emitida.`, 'success')
     } catch (err) {
-      alert('Error cobrando pedido: ' + err.message)
+      showToast('Error cobrando pedido: ' + err.message, 'danger')
     }
   }
 
@@ -686,6 +703,15 @@ export default function App() {
                   <span>Clientes</span>
                   <span className="nav-badge-count">{clientes.length}</span>
                 </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'usuarios' ? 'active' : ''}`}
+                  onClick={() => setActiveView('usuarios')}
+                >
+                  <Users size={16} />
+                  <span>Usuarios</span>
+                </button>
               </>
             )}
 
@@ -727,6 +753,15 @@ export default function App() {
                   <Users size={16} />
                   <span>Clientes</span>
                   <span className="nav-badge-count">{clientes.length}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'usuarios' ? 'active' : ''}`}
+                  onClick={() => setActiveView('usuarios')}
+                >
+                  <Users size={16} />
+                  <span>Usuarios</span>
                 </button>
               </>
             )}
@@ -996,7 +1031,7 @@ export default function App() {
               <div className="order-header-top">
                 <div className="order-title-box">
                   <Receipt size={22} color="#c084fc" />
-                  <h2 className="order-title">Ticket & Factura</h2>
+                  <h2 className="order-title">{orderType === 'LOCAL' ? `Cuenta: ${tableNumber || 'Mesa 1'}` : 'Ticket & Factura'}</h2>
                   {totalItemsCount > 0 && (
                     <span className="cart-count-badge">{totalItemsCount}</span>
                   )}
@@ -1038,10 +1073,10 @@ export default function App() {
                     type="button"
                     className={`btn-modality ${orderType === 'LOCAL' ? 'active' : ''}`}
                     onClick={() => setOrderType('LOCAL')}
-                    title="Consumo en el restaurante / comedor (lo que han comido)"
+                    title="Aperturar mesa con su número correspondiente y registrar cuenta a cobrar"
                   >
                     <Utensils size={15} />
-                    <span>En Restaurante</span>
+                    <span>Aperturar Mesa</span>
                   </button>
 
                   <button
@@ -1100,14 +1135,50 @@ export default function App() {
               {/* CAMPOS ESPECÍFICOS SEGÚN MODALIDAD */}
               <div className="order-subfields">
                 {orderType === 'LOCAL' && (
-                  <div>
-                    <input
-                      type="text"
-                      className="subfield-input"
-                      placeholder="Mesa / Zona (Ej: Mesa 4, Terraza 2, Barra)"
-                      value={tableNumber}
-                      onChange={(e) => setTableNumber(e.target.value)}
-                    />
+                  <div className="apertura-mesa-card">
+                    <div className="apertura-mesa-header">
+                      <div className="apertura-mesa-title">
+                        <Utensils size={15} color="#10b981" />
+                        <span>Apertura de Mesa</span>
+                      </div>
+                      <span className="badge-mesa-activa">{tableNumber || 'Mesa 1'}</span>
+                    </div>
+
+                    <label className="subfield-label">Selecciona el número de mesa correspondiente:</label>
+
+                    <div className="quick-mesas-grid">
+                      {['Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6', 'Mesa 7', 'Mesa 8', 'Barra 1', 'Barra 2', 'Terraza 1', 'Terraza 2'].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          className={`btn-quick-mesa ${tableNumber === m ? 'selected' : ''}`}
+                          onClick={() => setTableNumber(m)}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="mesa-custom-input-box">
+                      <input
+                        type="text"
+                        className="subfield-input"
+                        placeholder="O escribe mesa personalizada (ej: Mesa 12, Terraza VIP)..."
+                        value={tableNumber}
+                        onChange={(e) => setTableNumber(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="mesa-cuenta-resumen">
+                      <div className="mesa-cuenta-col">
+                        <span className="lbl-muted">Mesa Asignada</span>
+                        <strong className="val-mesa">🍽️ {tableNumber || 'Mesa 1'}</strong>
+                      </div>
+                      <div className="mesa-cuenta-col text-right">
+                        <span className="lbl-muted">Cuenta a Cobrar</span>
+                        <strong className="val-cuenta">${grandTotal.toFixed(2)}</strong>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1224,7 +1295,7 @@ export default function App() {
                 <span>${tax.toFixed(2)}</span>
               </div>
               <div className="summary-total">
-                <span>TOTAL A FACTURAR</span>
+                <span>{orderType === 'LOCAL' ? `CUENTA A COBRAR (${(tableNumber || 'MESA 1').toUpperCase()})` : 'TOTAL A FACTURAR'}</span>
                 <span className="total-amount">${grandTotal.toFixed(2)}</span>
               </div>
 
@@ -1292,7 +1363,7 @@ export default function App() {
                   title="Enviar la comanda a cocina y registrar el pedido pendiente de cobro"
                 >
                   <Utensils size={18} />
-                  <span>REGISTRAR Y ENVIAR COMANDA (${grandTotal.toFixed(2)})</span>
+                  <span>{orderType === 'LOCAL' ? `APERTURAR ${(tableNumber || 'MESA 1').toUpperCase()} • CUENTA $${grandTotal.toFixed(2)}` : `REGISTRAR Y ENVIAR COMANDA (${grandTotal.toFixed(2)})`}</span>
                 </button>
               ) : (
                 /* Si es Cajero o Admin: Cobra la orden y emite factura oficial */
@@ -1303,7 +1374,7 @@ export default function App() {
                   title="Cobrar la orden y generar factura fiscal oficial"
                 >
                   <Receipt size={18} />
-                  <span>COBRAR Y GENERAR FACTURA (${grandTotal.toFixed(2)})</span>
+                  <span>{orderType === 'LOCAL' ? `COBRAR CUENTA ${(tableNumber || 'MESA 1').toUpperCase()} ($${grandTotal.toFixed(2)})` : `COBRAR Y GENERAR FACTURA ($${grandTotal.toFixed(2)})`}</span>
                 </button>
               )}
             </div>
@@ -1381,12 +1452,38 @@ export default function App() {
           clientes={clientes}
           onNuevoClienteClick={() => setIsClienteModalOpen(true)}
           onIniciarPedidoConCliente={handleIniciarPedidoConCliente}
+          onEliminarCliente={handleSolicitarEliminarCliente}
         />
+      )}
+
+      {/* ========================================================= */}
+      {/* VISTA 6: GESTIÓN DE USUARIOS Y EQUIPO                     */}
+      {/* ========================================================= */}
+      {activeView === 'usuarios' && (
+        <main className="history-view-container" style={{ padding: '2rem 1rem' }}>
+          <TablaUsuarios />
+        </main>
       )}
 
       {/* ========================================================= */}
       {/* MODAL: GESTIÓN DE CLIENTES                                */}
       {/* ========================================================= */}
+      {/* MODAL DE CONFIRMACIÓN VISUAL (SIN ALERT NATIVO) */}
+      <ConfirmModal
+        isOpen={Boolean(clienteAEliminar)}
+        title="¿Eliminar cliente?"
+        message={
+          clienteAEliminar
+            ? `¿Estás seguro de que deseas eliminar a "${clienteAEliminar.nombre} ${clienteAEliminar.apellido || ''}"? Esta acción removerá al cliente del directorio.`
+            : ''
+        }
+        confirmText="Eliminar cliente"
+        confirmColor="#b91010"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmarEliminarCliente}
+        onClose={() => setClienteAEliminar(null)}
+      />
+
       <ClienteModal
         isOpen={isClienteModalOpen}
         onClose={() => setIsClienteModalOpen(false)}
