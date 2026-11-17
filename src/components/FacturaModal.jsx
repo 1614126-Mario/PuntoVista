@@ -15,6 +15,7 @@ import {
   ShieldCheck
 } from 'lucide-react'
 import { numeroALetras } from '../utils/numberToLetters'
+import ventaService from '../services/ventaService'
 
 export default function FacturaModal({
   isOpen,
@@ -100,14 +101,22 @@ export default function FacturaModal({
     window.print()
   }
 
-  // Simular envío de email
-  const handleSendEmail = () => {
+  // Envío real de factura por correo
+  const handleSendEmail = async () => {
+    let correo = cliente?.email
+    if (!correo || !correo.includes('@')) {
+      correo = window.prompt('Ingresa el correo personal para enviar la factura:', correo || '')
+    }
+    if (!correo || !correo.trim()) return
+
     setIsSendingEmail(true)
-    setTimeout(() => {
-      setIsSendingEmail(false)
+    try {
+      await ventaService.enviarFacturaEmail(id, correo.trim())
       setEmailSent(true)
-      setTimeout(() => setEmailSent(false), 4000)
-    }, 1000)
+      setTimeout(() => setEmailSent(false), 5000)
+    } finally {
+      setIsSendingEmail(false)
+    }
   }
 
   // Descargar factura en archivo HTML legible (Salvadoreño, USD, responsive)

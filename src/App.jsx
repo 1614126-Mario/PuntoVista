@@ -587,17 +587,22 @@ export default function App() {
   // =========================================================
   // CAJERO: COBRAR PEDIDO PENDIENTE REGISTRADO PREVIAMENTE
   // =========================================================
-  const handleCobrarPedidoPendiente = async (pedido, metodoKey = paymentMethod) => {
+  const handleCobrarPedidoPendiente = async (pedido, metodoKey = paymentMethod, email = '') => {
     try {
+      const emailFinal = email || pedido.cliente?.email || ''
       const pedidoCobrado = {
         ...pedido,
         estado: 'FACTURADO',
         paymentMethod: PAYMENT_LABELS[metodoKey],
         metodoPago: PAYMENT_LABELS[metodoKey],
-        cajero: currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : 'Cajero en Turno'
+        cajero: currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : 'Cajero en Turno',
+        cliente: {
+          ...pedido.cliente,
+          email: emailFinal
+        }
       }
 
-      const guardada = await ventaService.cobrar(pedido, pedidoCobrado.metodoPago)
+      const guardada = await ventaService.cobrar(pedido, pedidoCobrado.metodoPago, emailFinal)
       const pedidoFinal = guardada ? { ...pedidoCobrado, ...guardada, estado: 'FACTURADO' } : pedidoCobrado
 
       ventaService.saveLocal(pedidoFinal)
@@ -606,7 +611,8 @@ export default function App() {
       setPedidoACobrar(null)
       setActiveFactura(pedidoFinal)
       setIsFacturaModalOpen(true)
-      showToast(`¡Pedido ${pedido.numeroFactura || pedido.folio} cobrado exitosamente! Factura emitida.`, 'success')
+      const msgEmail = emailFinal ? ' y enviada a ' + emailFinal : ''
+      showToast('¡Pedido ' + (pedido.numeroFactura || pedido.folio) + ' cobrado exitosamente! Factura emitida' + msgEmail + '.', 'success')
     } catch (err) {
       showToast('Error cobrando pedido: ' + err.message, 'danger')
     }

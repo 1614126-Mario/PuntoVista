@@ -23,31 +23,30 @@ export const ventaService = {
       })
 
       if (response.ok) {
+        this.estadoServidor = 'ok'
         const data = await response.json()
-        if (Array.isArray(data)) {
-          this.estadoServidor = 'ok'
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-          return data
-        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+        return data
       }
-      this.estadoServidor = (response.status === 401 || response.status === 403) ? 'sin_sesion' : 'sin_conexion'
+
+      if (response.status === 401 || response.status === 403) {
+        this.estadoServidor = 'sin_sesion'
+      } else {
+        this.estadoServidor = 'sin_conexion'
+      }
     } catch (err) {
       this.estadoServidor = 'sin_conexion'
       console.warn('Backend /api/ventas no disponible, usando almacenamiento local:', err)
     }
 
-    try {
-      const cached = localStorage.getItem(STORAGE_KEY)
-      return cached ? JSON.parse(cached) : []
-    } catch {
-      return []
-    }
+    const cached = localStorage.getItem(STORAGE_KEY)
+    return cached ? JSON.parse(cached) : []
   },
 
   /**
-   * Crea una nueva venta / factura en el backend
+   * Registra una nueva venta / factura en el backend (o respaldo local)
    */
-  async createVenta(ventaData) {
+  async createVenta(venta) {
     try {
       const response = await fetch(`${API_BASE}/api/ventas`, {
         method: 'POST',
@@ -56,36 +55,31 @@ export const ventaService = {
           'Accept': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify(ventaData)
+        body: JSON.stringify(venta)
       })
 
       if (response.ok) {
-        const guardada = await response.json()
         this.estadoServidor = 'ok'
-        this.saveLocal(guardada)
-        return guardada
+        const data = await response.json()
+        this.saveLocal(data)
+        return data
       }
-      this.estadoServidor = (response.status === 401 || response.status === 403) ? 'sin_sesion' : 'sin_conexion'
+
+      if (response.status === 401 || response.status === 403) {
+        this.estadoServidor = 'sin_sesion'
+      } else {
+        this.estadoServidor = 'sin_conexion'
+      }
     } catch (err) {
       this.estadoServidor = 'sin_conexion'
-      console.warn('No se pudo guardar la venta en backend, persistiendo localmente:', err)
+      console.warn('Backend /api/ventas no disponible al crear venta, guardando localmente:', err)
     }
 
-    // Fallback local: generar folio y totales
-    const subtotal = ventaData.detalles.reduce((acc, it) => acc + (it.precioUnitario * it.cantidad), 0)
-    const iva = Number((subtotal * 0.13).toFixed(2)) // 13% IVA El Salvador
-    const total = Number((subtotal + iva).toFixed(2))
-
     const guardadaLocal = {
-      ...ventaData,
+      ...venta,
       id: Date.now(),
-      fechaVenta: new Date().toISOString(),
-      numeroFactura: ventaData.numeroFactura || `FAC-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
-      subtotal,
-      iva,
-      total,
-      estado: ventaData.estado || 'FACTURADO',
-      soloLocal: true // no llegó al servidor: otros usuarios (caja) no la verán
+      numeroFactura: venta.numeroFactura || `FAC-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+      fechaVenta: new Date().toISOString()
     }
 
     this.saveLocal(guardadaLocal)
@@ -93,11 +87,11 @@ export const ventaService = {
   },
 
   /**
-   * Marca un pedido pendiente como cobrado en el backend.
-   * Devuelve null si el backend no está disponible o el pedido solo existe localmente.
+   * Marca un pedido pendiente como cobrado en el backend y envía la factura electrónica por correo.
    */
-  async cobrar(venta, metodoPago) {
+  async cobrar(venta, metodoPago, email) {
     try {
+      const emailFinal = email || venta.cliente?.email || ''
       const response = await fetch(`${API_BASE}/api/ventas/${venta.id}/cobro`, {
         method: 'PATCH',
         headers: {
@@ -105,11 +99,32 @@ export const ventaService = {
           'Accept': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify({ metodoPago })
+        body: JSON.stringify({ metodoPago, email: emailFinal })
       })
       if (response.ok) return await response.json()
     } catch (err) {
       console.warn('No se pudo registrar el cobro en el backend:', err)
+    }
+    return null
+  },
+
+  /**
+   * Reenvía la factura electrónica por correo al cliente.
+   */
+  async enviarFacturaEmail(ventaId, email) {
+    try {
+      const response = await fetch(`${API_BASE}/api/ventas/${ventaId}/enviar-factura`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email })
+      })
+      if (response.ok) return await response.json()
+    } catch (err) {
+      console.warn('No se pudo enviar la factura por correo:', err)
     }
     return null
   },

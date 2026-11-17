@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banknote, CreditCard, Smartphone, Globe, MapPin, Receipt, X } from 'lucide-react'
+import { Banknote, CreditCard, Smartphone, Globe, MapPin, Receipt, X, Mail } from 'lucide-react'
 import PaymentDetails from './PaymentDetails'
 
 const METODOS = [
@@ -25,6 +25,7 @@ function metodoInicial(pedido) {
 
 export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
   const [metodo, setMetodo] = useState(() => metodoInicial(pedido))
+  const [emailFactura, setEmailFactura] = useState(() => pedido.cliente?.email || '')
   const [cobrando, setCobrando] = useState(false)
 
   const total = Number(pedido.total || 0)
@@ -38,7 +39,7 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
   const confirmar = async () => {
     setCobrando(true)
     try {
-      await onConfirmar(pedido, metodo)
+      await onConfirmar(pedido, metodo, emailFactura.trim())
     } finally {
       setCobrando(false)
     }
@@ -62,6 +63,9 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
             <div style={{ marginBottom: 4 }}>
               <strong>Cliente:</strong>{' '}
               {pedido.cliente ? `${pedido.cliente.nombre} ${pedido.cliente.apellido || ''}` : 'Consumidor Final'}
+              {pedido.cliente?.documento && (
+                <span style={{ color: '#c084fc', marginLeft: 6 }}>[DUI: {pedido.cliente.documento}]</span>
+              )}
               {pedido.cliente?.telefono && (
                 <span style={{ color: '#9ca3af' }}> ({pedido.cliente.telefono})</span>
               )}
@@ -79,9 +83,36 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
                 </li>
               ))}
             </ul>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fbbf24' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fbbf24', marginBottom: 12 }}>
               {esMesa ? `Cuenta a cobrar (${destino}): ` : 'Total a cobrar: '}${total.toFixed(2)}
             </div>
+          </div>
+
+          {/* Campo de Correo Personal para envío de Factura */}
+          <div style={{ marginBottom: 12, padding: '10px 12px', background: 'rgba(168, 85, 247, 0.08)', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.25)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: '#c084fc', fontWeight: 600, marginBottom: 4 }}>
+              <Mail size={14} /> Correo para enviar Factura Electrónica:
+            </label>
+            <input
+              type="email"
+              placeholder="cliente@correo.com"
+              value={emailFactura}
+              onChange={(e) => setEmailFactura(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '7px 10px',
+                borderRadius: 8,
+                background: '#110d21',
+                border: '1px solid #3b2d66',
+                color: '#fff',
+                fontSize: '0.85rem',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+            <small style={{ fontSize: '0.7rem', color: '#9ca3af', display: 'block', marginTop: 3 }}>
+              Se enviará la factura detallada a este correo al procesar el cobro.
+            </small>
           </div>
 
           <div>
@@ -112,7 +143,7 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
           </button>
           <button type="button" className="btn-add-product" onClick={confirmar} disabled={cobrando}>
             <Receipt size={16} />
-            <span>{cobrando ? 'Cobrando...' : `Confirmar cobro ($${total.toFixed(2)})`}</span>
+            <span>{cobrando ? 'Procesando y enviando factura...' : `Cobrar y Enviar Factura ($${total.toFixed(2)})`}</span>
           </button>
         </div>
       </div>
