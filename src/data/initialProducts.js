@@ -6,7 +6,7 @@ export const INITIAL_PRODUCTS = [
     category: 'comida',
     price: 3.00,
     description: 'Tres pupusas a elegir (revueltas, queso con loroco o chicharrón), acompañadas de curtido artesanal y salsa de tomate natural.',
-    image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80',
+    image: '/pupusas.jpg',
     tag: 'Salvadoreño'
   },
   {
