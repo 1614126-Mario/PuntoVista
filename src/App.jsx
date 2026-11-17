@@ -63,12 +63,20 @@ export default function App() {
     }
   })
 
-  // Sin sesión: por defecto solo se muestra la interfaz de clientes; el personal entra mediante el login de empleados
-  const [showLogin, setShowLogin] = useState(() => window.location.hash === '#/login')
+  // Sin sesión: por defecto siempre se muestra exclusivamente la tienda de clientes (TiendaEnLinea)
+  const [showLogin, setShowLogin] = useState(false)
   const pedidosOnlineVistos = useRef(null)
 
-  // Sincronizar hash con vista de login para empleados
+  // Sincronizar hash y limpiar residuos de URL para que los clientes nunca vean el login de empleados por error
   useEffect(() => {
+    if (window.location.hash) {
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search)
+      } catch {
+        window.location.hash = ''
+      }
+    }
+
     const onHashChange = () => {
       if (window.location.hash === '#/login') {
         setShowLogin(true)
@@ -86,7 +94,6 @@ export default function App() {
   const [clienteAEliminar, setClienteAEliminar] = useState(null)
 
   const irALogin = () => {
-    window.location.hash = '#/login'
     setShowLogin(true)
   }
 
@@ -323,6 +330,12 @@ export default function App() {
   // Inicio y Cierre de Sesión
   const handleLogin = (user, remember) => {
     setCurrentUser(user)
+    setShowLogin(false)
+    try {
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+    } catch {
+      window.location.hash = ''
+    }
     if (remember) {
       localStorage.setItem('nocturna_user', JSON.stringify(user))
     }

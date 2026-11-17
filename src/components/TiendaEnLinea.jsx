@@ -28,7 +28,8 @@ import {
   KeyRound,
   FileText,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  Lock
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from '../data/initialProducts'
 import { PAYMENT_INFO } from '../data/paymentInfo'
@@ -480,11 +481,6 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               <ClipboardList size={16} />
               <span>Mis pedidos</span>
               {misPedidos.length > 0 && <span className="shop-count">{misPedidos.length}</span>}
-            </button>
-
-            <button type="button" className="shop-btn-ghost" onClick={onAccesoPersonal} title="Portal exclusivo para empleados (cajeros, meseros y administradores)">
-              <LogIn size={15} />
-              <span>Acceso Empleados</span>
             </button>
           </div>
         </div>
@@ -1283,6 +1279,34 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
           </div>
         </div>
       )}
+
+      {/* Pie de página con enlace discreto exclusivo para personal */}
+      <footer className="shop-footer" style={{ marginTop: '3.5rem', padding: '2rem 1rem 1.5rem', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', margin: '0 0 0.5rem' }}>
+          © {new Date().getFullYear()} La Taberna de los Morenazos • Comida Gourmet & Pupusas Tradicionales
+        </p>
+        {onAccesoPersonal && (
+          <button
+            type="button"
+            onClick={onAccesoPersonal}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.22)',
+              fontSize: '0.73rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '4px 8px',
+              borderRadius: '6px'
+            }}
+            title="Acceso restringido para personal (cajero, mesero, admin)"
+          >
+            <Lock size={11} /> Portal de Empleados
+          </button>
+        )}
+      </footer>
 
       {toast && <div className="shop-toast">{toast}</div>}
     </div>
