@@ -3,9 +3,8 @@
  * Conexión con Spring Boot Security (sesiones HTTP con JSESSIONID)
  */
 
-// Si se ejecuta en Vite dev server, la ruta relativa aprovecha el proxy configurado en vite.config.js.
-// De lo contrario, utiliza la variable de entorno VITE_API_URL.
-const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '')
+// URL base del backend desde variables de entorno (.env o Render/Vercel)
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export const authService = {
   /**

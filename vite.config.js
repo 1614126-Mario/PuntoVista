@@ -9,7 +9,7 @@ export default defineConfig({
     host: true, // permite abrir la app desde otros dispositivos de la red (celular)
     proxy: {
       '/api': {
-        target: 'http://localhost:8081',
+        target: 'https://puntoventarect.onrender.com',
         changeOrigin: true,
         secure: false,
       },

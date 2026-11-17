@@ -1,6 +1,6 @@
 import { INITIAL_CLIENTS } from '../data/initialClients'
 
-const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '')
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const STORAGE_KEY = 'nocturna_clientes'
 
