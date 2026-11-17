@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   Sparkles,
   Search,
@@ -103,6 +103,20 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
   const [error, setError] = useState('')
   const [confirmacion, setConfirmacion] = useState(null)
   const [toast, setToast] = useState('')
+
+  // ── Acceso secreto al panel de empleados: 5 clics rápidos en el logo ──
+  const logoClicksRef = useRef(0)
+  const logoTimerRef = useRef(null)
+  const handleLogoSecretClick = useCallback(() => {
+    logoClicksRef.current += 1
+    clearTimeout(logoTimerRef.current)
+    if (logoClicksRef.current >= 5) {
+      logoClicksRef.current = 0
+      if (onAccesoPersonal) onAccesoPersonal()
+      return
+    }
+    logoTimerRef.current = setTimeout(() => { logoClicksRef.current = 0 }, 1800)
+  }, [onAccesoPersonal])
 
   // Estados específicos para pago en efectivo y cálculo de vuelto
   const [necesitaVuelto, setNecesitaVuelto] = useState(false)
@@ -452,11 +466,17 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
       <header className="shop-header">
         <div className="shop-header-inner">
           <div className="shop-brand" onClick={() => setVista('menu')}>
-            <div className="shop-brand-icon" style={{ width: 54, height: 54, padding: 0, background: 'none', borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(160, 0, 255, 0.5)', boxShadow: '0 0 14px rgba(160, 0, 255, 0.6)' }}>
+            {/* 5 clics rápidos en el logo = acceso secreto al panel de empleados */}
+            <div
+              className="shop-brand-icon"
+              style={{ width: 54, height: 54, padding: 0, background: 'none', borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(160, 0, 255, 0.5)', boxShadow: '0 0 14px rgba(160, 0, 255, 0.6)', cursor: 'pointer', flexShrink: 0 }}
+              onClick={(e) => { e.stopPropagation(); handleLogoSecretClick() }}
+              title="La Taberna de los Morenazos"
+            >
               <img
                 src="/logo-taberna.jpg"
                 alt="La Taberna de los Morenazos"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', userSelect: 'none', pointerEvents: 'none' }}
               />
             </div>
             <div>
