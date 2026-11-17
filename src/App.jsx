@@ -322,7 +322,7 @@ export default function App() {
       console.warn('Error al cerrar sesión en el backend:', err)
     }
     setCurrentUser(null)
-    setShowLogin(true)
+    irATienda()
     localStorage.removeItem('nocturna_user')
     showToast('Sesión cerrada con éxito', 'danger')
   }

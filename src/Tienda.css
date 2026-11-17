@@ -837,3 +837,192 @@
 .shop-card-img {
   overflow: hidden;
 }
+
+/* ===== Estilos para Autenticación de Clientes y Validación de DUI ===== */
+.shop-client-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid var(--purple-400);
+}
+
+.shop-client-badge-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--purple-600);
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.shop-client-badge-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.shop-client-badge-text strong {
+  font-size: 0.82rem;
+  color: #fff;
+}
+
+.shop-client-badge-text small {
+  font-size: 0.68rem;
+  color: var(--purple-200);
+  font-family: monospace;
+}
+
+.shop-client-logout-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.shop-client-logout-btn:hover {
+  color: #f87171;
+}
+
+.shop-auth-callout {
+  margin: 0.8rem 0;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px dashed var(--purple-400);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.shop-auth-callout-icon {
+  color: var(--purple-300);
+}
+
+.shop-auth-callout strong {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.shop-auth-callout p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.shop-field-tip {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.shop-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+@media (max-width: 480px) {
+  .shop-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shop-auth-modal {
+  max-width: 440px;
+}
+
+.shop-auth-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+}
+
+.shop-auth-modal-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--purple-600), var(--purple-500));
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.shop-auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  background: #110d21;
+  padding: 0.3rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.shop-auth-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.shop-auth-tab.active {
+  background: var(--purple-800);
+  color: #fff;
+}
+
+.shop-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.shop-auth-switch {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.shop-auth-switch button {
+  background: transparent;
+  border: none;
+  color: var(--purple-300);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.shop-client-card-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  font-size: 0.82rem;
+  color: var(--purple-200);
+  text-align: left;
+}
