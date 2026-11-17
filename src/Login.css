@@ -605,14 +605,60 @@
   box-shadow: 0 4px 15px rgba(168, 85, 247, 0.5);
 }
 
-/* Responsividad */
+/* Responsividad Full Mobile y Tablet */
 @media (max-width: 500px) {
-  .login-card {
-    padding: 2rem 1.25rem;
-    border-radius: 20px;
+  .login-page {
+    padding: 1rem 0.75rem calc(2rem + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
+
+  .login-card {
+    padding: 1.5rem 1.15rem;
+    border-radius: 18px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .login-title {
+    font-size: 1.4rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .login-input {
+    font-size: 16px !important; /* Previene auto-zoom en iPhone */
+    padding: 0.75rem 0.85rem 0.75rem 2.6rem;
+  }
+
   .quick-access-buttons {
     grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .login-roles-selector {
+    gap: 0.35rem;
+  }
+
+  .role-chip {
+    padding: 0.45rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  .login-back-shop {
+    position: relative;
+    top: auto;
+    left: auto;
+    margin: 0 auto 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
   }
 }
 
