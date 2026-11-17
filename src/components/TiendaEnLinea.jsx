@@ -426,11 +426,38 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
 
   return (
     <div className="shop-page">
+      {/* ═══ Fondo fantasía: orbes, llamas y partículas ═══ */}
+      <div className="shop-bg-orb shop-bg-orb-1" aria-hidden="true" />
+      <div className="shop-bg-orb shop-bg-orb-2" aria-hidden="true" />
+      <div className="shop-bg-orb shop-bg-orb-3" aria-hidden="true" />
+      <div className="shop-flame-right" aria-hidden="true" />
+      {/* Partículas mágicas flotantes */}
+      {[...Array(14)].map((_, i) => (
+        <span
+          key={i}
+          className="shop-particle"
+          aria-hidden="true"
+          style={{
+            width: `${3 + (i % 4)}px`,
+            height: `${3 + (i % 4)}px`,
+            left: `${(i * 7.3) % 100}%`,
+            bottom: `${(i * 11) % 35}%`,
+            animationDuration: `${3.5 + (i % 5)}s, ${1.8 + (i % 3)}s`,
+            animationDelay: `${-(i * 0.6)}s, ${-(i * 0.4)}s`,
+            opacity: 0.7 + (i % 3) * 0.1
+          }}
+        />
+      ))}
+
       <header className="shop-header">
         <div className="shop-header-inner">
           <div className="shop-brand" onClick={() => setVista('menu')}>
-            <div className="shop-brand-icon">
-              <Sparkles size={22} />
+            <div className="shop-brand-icon" style={{ width: 54, height: 54, padding: 0, background: 'none', borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(160, 0, 255, 0.5)', boxShadow: '0 0 14px rgba(160, 0, 255, 0.6)' }}>
+              <img
+                src="/logo-taberna.jpg"
+                alt="La Taberna de los Morenazos"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
             </div>
             <div>
               <h1>La Taberna de los Morenazos</h1>

@@ -682,8 +682,8 @@ export default function App() {
         <div className="header-inner">
           {/* LOGOTIPO */}
           <div className="brand-wrapper" onClick={() => setActiveView('pos')} style={{ cursor: 'pointer' }}>
-            <div className="brand-icon-box">
-              <Sparkles size={26} />
+            <div className="brand-icon-box" style={{ width: 46, height: 46, padding: 0, background: 'none', borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(160, 0, 255, 0.5)', boxShadow: '0 0 12px rgba(160, 0, 255, 0.55)', flexShrink: 0 }}>
+              <img src="/logo-taberna.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
             <div>
               <h1 className="brand-title">

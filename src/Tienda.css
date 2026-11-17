@@ -1,8 +1,136 @@
 /* ===== Tienda en línea (vista pública para consumidores) ===== */
+
+/* Animaciones fondo fantasía */
+@keyframes flicker1 {
+  0%, 100% { opacity: 0.55; transform: scaleY(1) translateY(0); }
+  25%       { opacity: 0.75; transform: scaleY(1.06) translateY(-6px); }
+  60%       { opacity: 0.4;  transform: scaleY(0.95) translateY(4px); }
+}
+@keyframes flicker2 {
+  0%, 100% { opacity: 0.5;  transform: scaleY(1) translateY(0) scaleX(1); }
+  33%       { opacity: 0.8;  transform: scaleY(1.1) translateY(-10px) scaleX(1.04); }
+  70%       { opacity: 0.35; transform: scaleY(0.92) translateY(5px) scaleX(0.97); }
+}
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.08); }
+  66%       { transform: translate(-20px, 15px) scale(0.95); }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1; }
+}
+@keyframes particle-rise {
+  0%   { transform: translateY(0) scale(1);   opacity: 0.8; }
+  100% { transform: translateY(-120px) scale(0.3); opacity: 0; }
+}
+
 .shop-page {
   min-height: 100vh;
-  background: var(--bg-main);
+  background: #0a0612;
   color: var(--text-main);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Gradiente de fondo profundo */
+.shop-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 20% 85%, rgba(120, 0, 220, 0.3) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 55% at 80% 10%, rgba(160, 0, 255, 0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 90% 40% at 50% 100%, rgba(80, 0, 180, 0.38) 0%, transparent 55%),
+    linear-gradient(180deg, #0a0612 0%, #100520 40%, #0d0318 100%);
+  pointer-events: none;
+}
+
+/* Llama fantasía izquierda */
+.shop-page::after {
+  content: '';
+  position: fixed;
+  left: -60px;
+  bottom: -40px;
+  width: 420px;
+  height: 520px;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 90% at 40% 100%, rgba(140, 0, 255, 0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 35% 60% at 20% 80%, rgba(200, 0, 255, 0.4) 0%, transparent 60%);
+  filter: blur(28px);
+  animation: flicker1 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Orbes flotantes */
+.shop-bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(55px);
+  pointer-events: none;
+  z-index: 0;
+  animation: float-orb 8s ease-in-out infinite;
+}
+.shop-bg-orb-1 {
+  width: 350px; height: 350px;
+  top: -80px; right: -60px;
+  background: radial-gradient(circle, rgba(130, 0, 255, 0.45) 0%, transparent 70%);
+  animation-duration: 7s;
+  animation-delay: -2s;
+}
+.shop-bg-orb-2 {
+  width: 280px; height: 280px;
+  bottom: 10%; left: 5%;
+  background: radial-gradient(circle, rgba(90, 0, 200, 0.4) 0%, transparent 70%);
+  animation-duration: 10s;
+  animation-delay: -5s;
+}
+.shop-bg-orb-3 {
+  width: 200px; height: 200px;
+  top: 40%; right: 10%;
+  background: radial-gradient(circle, rgba(170, 0, 255, 0.3) 0%, transparent 70%);
+  animation-duration: 9s;
+  animation-delay: -1s;
+}
+
+/* Llama fantasía derecha */
+.shop-flame-right {
+  position: fixed;
+  right: -50px;
+  bottom: -30px;
+  width: 380px;
+  height: 500px;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 55% 85% at 60% 100%, rgba(140, 0, 255, 0.5) 0%, transparent 70%),
+    radial-gradient(ellipse 30% 55% at 80% 80%, rgba(200, 0, 255, 0.35) 0%, transparent 60%);
+  filter: blur(30px);
+  animation: flicker2 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Partículas mágicas */
+.shop-particle {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(200, 100, 255, 0.85);
+  box-shadow: 0 0 6px 2px rgba(180, 0, 255, 0.6);
+  pointer-events: none;
+  z-index: 0;
+  animation: particle-rise linear infinite, glow-pulse ease-in-out infinite;
+}
+
+/* Asegura que el contenido esté sobre el fondo */
+.shop-header,
+.shop-container,
+.shop-layout,
+.shop-footer,
+.shop-catalog,
+.shop-cart-panel {
+  position: relative;
+  z-index: 1;
 }
 
 .shop-header {
