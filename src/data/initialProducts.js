@@ -1,3 +1,5 @@
+import pupusasImg from '../assets/pupusas.jpg'
+
 export const INITIAL_PRODUCTS = [
   // --- COMIDAS ---
   {
@@ -6,7 +8,7 @@ export const INITIAL_PRODUCTS = [
     category: 'comida',
     price: 3.00,
     description: 'Tres pupusas a elegir (revueltas, queso con loroco o chicharrón), acompañadas de curtido artesanal y salsa de tomate natural.',
-    image: '/pupusas.jpg',
+    image: pupusasImg,
     tag: 'Salvadoreño'
   },
   {

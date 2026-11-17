@@ -167,7 +167,7 @@ export default function Login({ onLogin, onVolver }) {
 
       {onVolver && (
         <button type="button" className="login-back-shop" onClick={onVolver}>
-          ← Ir a la tienda en línea
+          ← Volver a la tienda de clientes
         </button>
       )}
 
@@ -183,7 +183,7 @@ export default function Login({ onLogin, onVolver }) {
               <span className="login-purple-gradient">La Taberna de los Morenazos</span>
             </h1>
             <p className="login-subtitle">
-              Ingresa tus credenciales para acceder al sistema
+              Portal de Empleados y Personal Autorizado (Cajero, Mesero, Administrador)
             </p>
           </div>
 

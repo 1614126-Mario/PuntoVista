@@ -482,9 +482,9 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               {misPedidos.length > 0 && <span className="shop-count">{misPedidos.length}</span>}
             </button>
 
-            <button type="button" className="shop-btn-ghost" onClick={onAccesoPersonal} title="Portal para meseros y administradores">
+            <button type="button" className="shop-btn-ghost" onClick={onAccesoPersonal} title="Portal exclusivo para empleados (cajeros, meseros y administradores)">
               <LogIn size={15} />
-              <span>Acceso personal</span>
+              <span>Acceso Empleados</span>
             </button>
           </div>
         </div>

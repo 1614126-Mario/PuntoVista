@@ -63,9 +63,22 @@ export default function App() {
     }
   })
 
-  // Sin sesión: se muestra la tienda pública; el personal entra con #/login
+  // Sin sesión: por defecto solo se muestra la interfaz de clientes; el personal entra mediante el login de empleados
   const [showLogin, setShowLogin] = useState(() => window.location.hash === '#/login')
   const pedidosOnlineVistos = useRef(null)
+
+  // Sincronizar hash con vista de login para empleados
+  useEffect(() => {
+    const onHashChange = () => {
+      if (window.location.hash === '#/login') {
+        setShowLogin(true)
+      } else if (!window.location.hash) {
+        setShowLogin(false)
+      }
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   // Cobro de pedidos pendientes (modal) y filtro con el que se abre el historial
   const [pedidoACobrar, setPedidoACobrar] = useState(null)
@@ -78,7 +91,11 @@ export default function App() {
   }
 
   const irATienda = () => {
-    history.replaceState(null, '', window.location.pathname + window.location.search)
+    try {
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+    } catch {
+      window.location.hash = ''
+    }
     setShowLogin(false)
   }
 
@@ -200,7 +217,12 @@ export default function App() {
       if (estado === 'expirada') {
         localStorage.removeItem('nocturna_user')
         setCurrentUser(null)
-        setShowLogin(true)
+        setShowLogin(false)
+        try {
+          history.replaceState(null, '', window.location.pathname + window.location.search)
+        } catch {
+          window.location.hash = ''
+        }
       }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -321,10 +343,17 @@ export default function App() {
     } catch (err) {
       console.warn('Error al cerrar sesión en el backend:', err)
     }
-    setCurrentUser(null)
-    irATienda()
     localStorage.removeItem('nocturna_user')
-    showToast('Sesión cerrada con éxito', 'danger')
+    setCurrentUser(null)
+    setShowLogin(false)
+    if (window.location.hash) {
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search)
+      } catch {
+        window.location.hash = ''
+      }
+    }
+    showToast('Sesión cerrada con éxito. Mostrando tienda de clientes.', 'info')
   }
 
   // --- ACCIONES DE CARRITO ---
