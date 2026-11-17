@@ -14,8 +14,10 @@ import {
   TrendingUp,
   Receipt,
   RotateCcw,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react'
+import ventaService from '../services/ventaService'
 
 export default function HistorialFacturas({
   ventas = [],
@@ -27,6 +29,8 @@ export default function HistorialFacturas({
 }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterTipo, setFilterTipo] = useState(filtroInicial) // 'ALL' | 'LOCAL' | 'EN_LINEA' | 'LLEVAR' | 'DEBEN'
+  const [eliminando, setEliminando] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
   // Filtrado de ventas
   const filteredVentas = useMemo(() => {
@@ -59,6 +63,21 @@ export default function HistorialFacturas({
   const totalFacturado = ventas.reduce((acc, v) => acc + Number(v.total || 0), 0)
   const pedidosLocales = ventas.filter((v) => (v.tipoPedido || 'LOCAL') === 'LOCAL').length
   const pedidosOnline = ventas.filter((v) => v.tipoPedido === 'EN_LINEA').length
+
+  const handleEliminar = async (venta) => {
+    setEliminando(venta.id)
+    try {
+      await ventaService.deleteVenta(venta)
+      if (onRecargar) {
+        await onRecargar(venta)
+      }
+    } catch (err) {
+      console.error('Error eliminando pedido:', err)
+    } finally {
+      setEliminando(null)
+      setConfirmDelete(null)
+    }
+  }
 
   return (
     <div className="history-view-container">
@@ -312,11 +331,75 @@ export default function HistorialFacturas({
                       <Eye size={15} />
                       <span>{venta.estado === 'PENDIENTE_PAGO' ? 'Ver Comanda' : 'Ver Factura'}</span>
                     </button>
+
+                    <button
+                      type="button"
+                      title="Eliminar definitivamente este pedido"
+                      disabled={eliminando === venta.id}
+                      onClick={() => setConfirmDelete(venta)}
+                      style={{
+                        background: 'rgba(239,68,68,0.12)',
+                        border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: '8px',
+                        color: '#f87171',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '0.4rem 0.6rem',
+                        fontSize: '0.78rem'
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Modal de confirmacion de eliminacion definitiva */}
+      {confirmDelete && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '1rem'
+        }}>
+          <div style={{
+            background: '#1a1030', border: '1px solid rgba(239,68,68,0.4)',
+            borderRadius: '16px', padding: '2rem', maxWidth: '420px', width: '100%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1rem' }}>
+              <Trash2 size={22} color="#f87171" />
+              <h3 style={{ margin: 0, color: '#f87171' }}>Eliminar pedido</h3>
+            </div>
+            <p style={{ color: '#d1d5db', marginBottom: '0.5rem' }}>
+              Estas seguro de eliminar definitivamente este pedido del sistema?
+            </p>
+            <p style={{ color: '#fca5a5', fontSize: '0.82rem', marginBottom: '1.5rem' }}>
+              Esta accion no se puede deshacer. El pedido sera borrado del servidor.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(null)}
+                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#d1d5db', borderRadius: '8px', padding: '0.55rem 1.1rem', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={eliminando === confirmDelete.id}
+                onClick={() => handleEliminar(confirmDelete)}
+                style={{ background: 'rgba(239,68,68,0.85)', border: 'none', color: '#fff', borderRadius: '8px', padding: '0.55rem 1.4rem', cursor: 'pointer', fontWeight: 600 }}
+              >
+                {eliminando === confirmDelete.id ? 'Eliminando...' : 'Si, eliminar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

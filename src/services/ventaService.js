@@ -130,6 +130,88 @@ export const ventaService = {
   },
 
   /**
+   * Actualiza el estado o datos de una venta en backend y almacenamiento local
+   */
+  async updateVenta(ventaId, datos) {
+    this.saveLocal({ ...datos, id: ventaId })
+    try {
+      const response = await fetch(`${API_BASE}/api/ventas/${encodeURIComponent(ventaId)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(datos)
+      })
+      if (response.ok) {
+        const data = await response.json()
+        this.saveLocal(data)
+        return data
+      }
+    } catch (err) {
+      console.warn('Error actualizando venta en backend:', err)
+    }
+    return null
+  },
+
+  /**
+   * Elimina definitivamente una venta del backend y del almacenamiento local
+   */
+  async deleteVenta(ventaOrId) {
+    const id = typeof ventaOrId === 'object' ? ventaOrId?.id : ventaOrId
+    const folio = typeof ventaOrId === 'object' ? (ventaOrId?.numeroFactura || ventaOrId?.folio) : null
+    const param = id != null ? id : folio
+
+    // Siempre eliminar de cache local inmediatamente para que nunca reaparezca
+    this.removeLocal(id, folio)
+
+    try {
+      let response = await fetch(`${API_BASE}/api/ventas/${encodeURIComponent(param)}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      // Si no encontró por ID numérico pero tenemos el folio, intentar eliminar por folio
+      if (!response.ok && folio && String(folio) !== String(id)) {
+        response = await fetch(`${API_BASE}/api/ventas/${encodeURIComponent(folio)}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        })
+      }
+
+      if (response.ok || response.status === 204 || response.status === 404) {
+        this.estadoServidor = 'ok'
+        return true
+      }
+      if (response.status === 401 || response.status === 403) {
+        this.estadoServidor = 'sin_sesion'
+      }
+    } catch (err) {
+      console.warn('No se pudo eliminar la venta en el backend, se eliminó del almacenamiento local:', err)
+    }
+    return true
+  },
+
+  /**
+   * Elimina una venta del localStorage por ID o por folio
+   */
+  removeLocal(ventaId, numeroFactura) {
+    try {
+      const cached = localStorage.getItem(STORAGE_KEY)
+      if (!cached) return
+      const list = JSON.parse(cached).filter(v => {
+        const matchesId = ventaId != null && String(v.id) === String(ventaId)
+        const matchesFolio = numeroFactura && (v.numeroFactura === numeroFactura || v.folio === numeroFactura)
+        return !matchesId && !matchesFolio
+      })
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+    } catch (e) {
+      console.error('Error eliminando venta local:', e)
+    }
+  },
+
+  /**
    * Guarda o actualiza venta en localStorage
    */
   saveLocal(venta) {

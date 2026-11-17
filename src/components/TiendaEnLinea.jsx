@@ -154,6 +154,16 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
   const [folioBusqueda, setFolioBusqueda] = useState('')
   const [errorBusqueda, setErrorBusqueda] = useState('')
 
+  const eliminarPedidoDeMisPedidos = async (folio) => {
+    try {
+      await pedidoPublicoService.eliminarPedido(folio)
+      setMisPedidos((prev) => prev.filter((p) => p.folio !== folio))
+      mostrarToast(`Pedido ${folio} eliminado definitivamente.`, 'info')
+    } catch (e) {
+      console.warn('Error eliminando pedido:', e)
+    }
+  }
+
   // Sincronizar datos del cliente activo en el formulario de pedido
   useEffect(() => {
     if (clienteActivo) {
@@ -586,9 +596,20 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                     )}
                     <div className="shop-order-foot">
                       <strong>{money(det?.total ?? p.total)}</strong>
-                      <button type="button" className="shop-btn-ghost" onClick={() => refrescarEstado(p.folio)}>
-                        <RotateCcw size={14} /> Actualizar
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                        <button type="button" className="shop-btn-ghost" onClick={() => refrescarEstado(p.folio)} title="Actualizar estado del pedido">
+                          <RotateCcw size={14} /> Actualizar
+                        </button>
+                        <button
+                          type="button"
+                          className="shop-btn-ghost"
+                          style={{ color: '#f87171', borderColor: 'rgba(239,68,68,0.3)' }}
+                          onClick={() => eliminarPedidoDeMisPedidos(p.folio)}
+                          title="Eliminar este pedido definitivamente"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )

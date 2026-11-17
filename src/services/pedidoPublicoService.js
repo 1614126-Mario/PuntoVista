@@ -64,6 +64,27 @@ export const pedidoPublicoService = {
       direccionEntrega: pedido.direccionEntrega
     })
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lista.slice(0, 20)))
+  },
+
+  /** Elimina un pedido del historial local y del backend */
+  async eliminarPedido(folio) {
+    this.eliminarPedidoLocal(folio)
+    try {
+      await fetch(`${API_BASE}/api/publico/pedidos/${encodeURIComponent(folio)}`, {
+        method: 'DELETE'
+      })
+    } catch (e) {
+      console.warn('Error notificando cancelación al backend:', e)
+    }
+  },
+
+  eliminarPedidoLocal(folio) {
+    try {
+      const lista = this.getPedidosLocales().filter((p) => p.folio !== folio)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
+    } catch (e) {
+      console.warn('Error eliminando pedido local:', e)
+    }
   }
 }
 

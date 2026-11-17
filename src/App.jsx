@@ -266,7 +266,8 @@ export default function App() {
       }
     }
 
-    const id = setInterval(refrescar, 10000)
+    refrescar() // ejecutar inmediatamente al montar
+    const id = setInterval(refrescar, 3000)
     return () => clearInterval(id)
   }, [currentUser])
 
@@ -615,7 +616,8 @@ export default function App() {
         estado: 'PENDIENTE_PAGO'
       }
 
-      setVentas(prev => [dataFinal, ...prev])
+      // Refrescar desde el servidor para que todos los dispositivos vean el pedido al instante
+      ventaService.getVentas().then(lista => setVentas(lista)).catch(() => setVentas(prev => [dataFinal, ...prev]))
       setCart([])
       setOrderNotes('')
       setIsMobileCartOpen(false)
@@ -649,7 +651,8 @@ export default function App() {
 
       ventaService.saveLocal(pedidoFinal)
 
-      setVentas(prev => prev.map(v => v.id === pedido.id ? pedidoFinal : v))
+      // Refrescar inmediatamente para que caja y meseros vean el cambio sin esperar
+      ventaService.getVentas().then(lista => setVentas(lista)).catch(() => setVentas(prev => prev.map(v => v.id === pedido.id ? pedidoFinal : v)))
       setPedidoACobrar(null)
       setActiveFactura(pedidoFinal)
       setIsFacturaModalOpen(true)
@@ -1471,10 +1474,23 @@ export default function App() {
         <HistorialFacturas
           ventas={ventas}
           onVerFactura={handleVerFactura}
-          onRecargar={async () => {
-            const res = await ventaService.getVentas()
-            setVentas(res)
-            showToast('Listado de facturas actualizado', 'success')
+          onRecargar={async (eliminada) => {
+            if (eliminada) {
+              const idElim = typeof eliminada === 'object' ? eliminada.id : eliminada
+              const folioElim = typeof eliminada === 'object' ? (eliminada.numeroFactura || eliminada.folio) : null
+              setVentas(prev => prev.filter(v => {
+                const matchesId = idElim != null && String(v.id) === String(idElim)
+                const matchesFolio = folioElim && (v.numeroFactura === folioElim || v.folio === folioElim)
+                return !matchesId && !matchesFolio
+              }))
+            }
+            try {
+              const res = await ventaService.getVentas()
+              setVentas(res)
+            } catch (err) {
+              console.warn('Error refrescando ventas tras eliminar:', err)
+            }
+            showToast(eliminada ? 'Pedido eliminado definitivamente' : 'Listado de facturas actualizado', eliminada ? 'danger' : 'success')
           }}
           onIrAlPOS={() => setActiveView('pos')}
           onCobrarPedido={setPedidoACobrar}
