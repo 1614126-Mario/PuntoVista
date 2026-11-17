@@ -1,19 +1,17 @@
 import { useState } from 'react'
-import { Banknote, CreditCard, Smartphone, Globe, MapPin, Receipt, X, Mail } from 'lucide-react'
+import { Banknote, CreditCard, Smartphone, MapPin, Receipt, X, Mail, DollarSign } from 'lucide-react'
 import PaymentDetails from './PaymentDetails'
 
 const METODOS = [
   { key: 'cash', label: 'Efectivo', icon: Banknote },
   { key: 'card', label: 'Tarjeta', icon: CreditCard },
-  { key: 'transfer', label: 'Transferencia', icon: Smartphone },
-  { key: 'online', label: 'En línea', icon: Globe }
+  { key: 'transfer', label: 'Transferencia', icon: Smartphone }
 ]
 
 const METODO_POR_TEXTO = [
   ['Efectivo', 'cash'],
   ['Tarjeta', 'card'],
-  ['Transferencia', 'transfer'],
-  ['Línea', 'online']
+  ['Transferencia', 'transfer']
 ]
 
 // Si el cliente ya eligió forma de pago (pedidos en línea), se preselecciona.
@@ -27,6 +25,7 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
   const [metodo, setMetodo] = useState(() => metodoInicial(pedido))
   const [emailFactura, setEmailFactura] = useState(() => pedido.cliente?.email || '')
   const [cobrando, setCobrando] = useState(false)
+  const [cajeroPagaCon, setCajeroPagaCon] = useState('')
 
   const total = Number(pedido.total || 0)
   const items = pedido.detalles || pedido.items || []
@@ -35,6 +34,16 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
   const destino = esLinea
     ? pedido.direccionEntrega || pedido.cliente?.direccion || 'Dirección no especificada'
     : pedido.numeroMesa || (pedido.tipoPedido === 'LLEVAR' ? 'Para llevar (mostrador)' : 'Salón')
+
+  // Extraer notas de vuelto si existen en el pedido
+  const notasPedido = pedido.notas || ''
+  const matchVuelto = notasPedido.match(/\[💵 EFECTIVO:([^\]]+)\]/)
+  const detalleVueltoCliente = matchVuelto ? matchVuelto[1] : null
+
+  const montoRecibidoNum = parseFloat(cajeroPagaCon)
+  const vueltoCajero = Number.isFinite(montoRecibidoNum) && montoRecibidoNum >= total 
+    ? Number((montoRecibidoNum - total).toFixed(2)) 
+    : null
 
   const confirmar = async () => {
     setCobrando(true)
@@ -83,10 +92,28 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
                 </li>
               ))}
             </ul>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fbbf24', marginBottom: 12 }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fbbf24', marginBottom: 8 }}>
               {esMesa ? `Cuenta a cobrar (${destino}): ` : 'Total a cobrar: '}${total.toFixed(2)}
             </div>
           </div>
+
+          {/* Banner de Información de Vuelto solicitado por el Cliente */}
+          {detalleVueltoCliente && (
+            <div style={{
+              margin: '8px 0 12px',
+              padding: '10px 12px',
+              background: 'rgba(52, 211, 153, 0.1)',
+              border: '1px solid rgba(52, 211, 153, 0.35)',
+              borderRadius: 10,
+              fontSize: '0.83rem',
+              color: '#34d399'
+            }}>
+              <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <DollarSign size={15} /> Solicitud de Efectivo del Cliente:
+              </div>
+              <div style={{ color: '#fff' }}>{detalleVueltoCliente}</div>
+            </div>
+          )}
 
           {/* Campo de Correo Personal para envío de Factura */}
           <div style={{ marginBottom: 12, padding: '10px 12px', background: 'rgba(168, 85, 247, 0.08)', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.25)' }}>
@@ -133,6 +160,62 @@ export default function CobroModal({ pedido, onConfirmar, onCerrar }) {
                 )
               })}
             </div>
+
+            {/* Calculadora rápida de vuelto para el cajero si es Efectivo */}
+            {metodo === 'cash' && (
+              <div style={{ marginTop: 10, padding: 10, background: '#110d21', borderRadius: 10, border: '1px solid #2d2645' }}>
+                <span style={{ fontSize: '0.75rem', color: '#a78bfa', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                  Billetes rápidos para cambio en caja:
+                </span>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                  {[5, 10, 20, 50, 100].map((b) => (
+                    <button
+                      type="button"
+                      key={b}
+                      disabled={b < total}
+                      onClick={() => setCajeroPagaCon(String(b))}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        border: '1px solid ' + (b >= total ? '#a855f7' : '#374151'),
+                        background: cajeroPagaCon === String(b) ? '#a855f7' : '#1e1638',
+                        color: b >= total ? '#fff' : '#6b7280',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        cursor: b >= total ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      ${b}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Paga con: $</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder={total.toFixed(2)}
+                    value={cajeroPagaCon}
+                    onChange={(e) => setCajeroPagaCon(e.target.value)}
+                    style={{
+                      width: 90,
+                      padding: '4px 8px',
+                      borderRadius: 6,
+                      background: '#16112a',
+                      border: '1px solid #3b2d66',
+                      color: '#fff',
+                      fontSize: '0.85rem'
+                    }}
+                  />
+                  {vueltoCajero !== null && (
+                    <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: '#34d399', fontWeight: 700 }}>
+                      Cambio: ${vueltoCajero.toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <PaymentDetails key={metodo} method={metodo} total={total} />
           </div>
         </div>

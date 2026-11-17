@@ -18,7 +18,6 @@ import {
   Banknote,
   CreditCard,
   Smartphone,
-  Globe,
   RotateCcw,
   LogIn,
   ClipboardList,
@@ -28,7 +27,8 @@ import {
   LogOut,
   KeyRound,
   FileText,
-  AlertCircle
+  AlertCircle,
+  DollarSign
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from '../data/initialProducts'
 import { PAYMENT_INFO } from '../data/paymentInfo'
@@ -38,12 +38,14 @@ import '../Tienda.css'
 
 const IVA_RATE = 0.13
 
+// Únicos 3 métodos de pago habilitados en la plataforma
 const METODOS = [
   { key: 'cash', label: 'Efectivo', backend: 'Efectivo', icon: Banknote },
   { key: 'card', label: 'Tarjeta', backend: 'Tarjeta', icon: CreditCard },
-  { key: 'transfer', label: 'Transferencia', backend: 'Transferencia', icon: Smartphone },
-  { key: 'online', label: 'En línea', backend: 'Pago en Línea', icon: Globe }
+  { key: 'transfer', label: 'Transferencia', backend: 'Transferencia', icon: Smartphone }
 ]
+
+const BILLETES_RAPIDOS = [5, 10, 20, 50, 100]
 
 const ESTADOS = {
   PENDIENTE_PAGO: { texto: 'Pedido recibido, esperando confirmación de pago', clase: 'pending', icon: Clock },
@@ -100,6 +102,11 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
   const [error, setError] = useState('')
   const [confirmacion, setConfirmacion] = useState(null)
   const [toast, setToast] = useState('')
+
+  // Estados específicos para pago en efectivo y cálculo de vuelto
+  const [necesitaVuelto, setNecesitaVuelto] = useState(false)
+  const [billeteSeleccionado, setBilleteSeleccionado] = useState(null) // 5 | 10 | 20 | 50 | 100 | 'otro'
+  const [montoPersonalizado, setMontoPersonalizado] = useState('')
 
   // Estado de sesión del cliente (consumidor)
   const [clienteActivo, setClienteActivo] = useState(() => {
@@ -160,6 +167,22 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
   const iva = Number((subtotal * IVA_RATE).toFixed(2))
   const total = Number((subtotal + iva).toFixed(2))
   const totalItems = cart.reduce((acc, it) => acc + it.quantity, 0)
+
+  // Cálculo del monto con el que paga el cliente en efectivo
+  const montoPagaCon = useMemo(() => {
+    if (!necesitaVuelto) return total
+    if (billeteSeleccionado === 'otro') {
+      const parsed = parseFloat(montoPersonalizado)
+      return Number.isFinite(parsed) ? parsed : null
+    }
+    return billeteSeleccionado ? Number(billeteSeleccionado) : null
+  }, [necesitaVuelto, billeteSeleccionado, montoPersonalizado, total])
+
+  // Cálculo automático del vuelto
+  const vueltoCalculado = useMemo(() => {
+    if (!necesitaVuelto || montoPagaCon === null || montoPagaCon < total) return 0
+    return Number((montoPagaCon - total).toFixed(2))
+  }, [necesitaVuelto, montoPagaCon, total])
 
   const mostrarToast = (msg) => {
     setToast(msg)
@@ -333,6 +356,23 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     if (form.telefono.trim().length < 8) return setError('Indica un teléfono de contacto válido.')
     if (form.direccion.trim().length < 10) return setError('Indica la dirección completa a donde enviaremos tu pedido.')
 
+    // Validación de efectivo y vuelto
+    let detalleVuelto = ''
+    if (metodo === 'cash') {
+      if (necesitaVuelto) {
+        if (montoPagaCon === null || montoPagaCon < total) {
+          return setError(`Indica un billete o monto válido mayor o igual a $${total.toFixed(2)} para calcular tu vuelto.`)
+        }
+        detalleVuelto = `[💵 EFECTIVO: Paga con $${montoPagaCon.toFixed(2)} | Vuelto: $${vueltoCalculado.toFixed(2)}]`
+      } else {
+        detalleVuelto = `[💵 EFECTIVO: Pago exacto ($${total.toFixed(2)}) - No requiere vuelto]`
+      }
+    }
+
+    const notasCompletas = detalleVuelto
+      ? (form.notas.trim() ? `${detalleVuelto} ${form.notas.trim()}` : detalleVuelto)
+      : form.notas.trim()
+
     setEnviando(true)
     try {
       const creado = await pedidoPublicoService.crearPedido({
@@ -342,10 +382,17 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
         email: form.email.trim(),
         direccionEntrega: form.direccion.trim(),
         referencia: form.referencia.trim(),
-        notas: form.notas.trim(),
+        notas: notasCompletas,
         metodoPago: METODOS.find((m) => m.key === metodo).backend,
         items: cart.map((i) => ({ nombre: i.name, cantidad: i.quantity, precio: i.price }))
       })
+
+      // Adjuntar la información de vuelto para la pantalla de confirmación
+      creado.detalleVuelto = detalleVuelto
+      creado.necesitaVuelto = necesitaVuelto
+      creado.montoPagaCon = montoPagaCon
+      creado.vueltoCalculado = vueltoCalculado
+
       setConfirmacion(creado)
       setEstados((prev) => ({ ...prev, [creado.folio]: creado }))
       setMisPedidos(pedidoPublicoService.getPedidosLocales())
@@ -752,7 +799,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                 </label>
 
                 <h3 className="shop-form-title">Forma de pago</h3>
-                <div className="shop-pay-grid">
+                <div className="shop-pay-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                   {METODOS.map((m) => {
                     const Icon = m.icon
                     return (
@@ -768,6 +815,126 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                     )
                   })}
                 </div>
+
+                {/* ===== INTERFAZ DE PAGO EN EFECTIVO CON CÁLCULO DE VUELTO ===== */}
+                {metodo === 'cash' && (
+                  <div className="shop-cash-vuelto-card">
+                    <div className="shop-vuelto-header">
+                      <DollarSign size={16} color="#34d399" />
+                      <span>¿Necesitas que el repartidor lleve vuelto?</span>
+                    </div>
+
+                    <div className="shop-vuelto-toggle">
+                      <button
+                        type="button"
+                        className={`shop-vuelto-btn ${!necesitaVuelto ? 'active' : ''}`}
+                        onClick={() => {
+                          setNecesitaVuelto(false)
+                          setBilleteSeleccionado(null)
+                          setMontoPersonalizado('')
+                        }}
+                      >
+                        Pagaré exacto (${total.toFixed(2)})
+                      </button>
+                      <button
+                        type="button"
+                        className={`shop-vuelto-btn ${necesitaVuelto ? 'active' : ''}`}
+                        onClick={() => {
+                          setNecesitaVuelto(true)
+                          const minBillete = BILLETES_RAPIDOS.find((b) => b >= total) || 100
+                          setBilleteSeleccionado(minBillete)
+                        }}
+                      >
+                        Sí, necesito vuelto
+                      </button>
+                    </div>
+
+                    {necesitaVuelto && (
+                      <div className="shop-vuelto-selector-box">
+                        <label className="shop-vuelto-label">
+                          Selecciona el billete con el que pagarás:
+                        </label>
+                        <div className="shop-billetes-grid">
+                          {BILLETES_RAPIDOS.map((b) => {
+                            const esMenor = b < total
+                            const esSeleccionado = billeteSeleccionado === b
+                            return (
+                              <button
+                                type="button"
+                                key={b}
+                                disabled={esMenor}
+                                className={`shop-billete-btn ${esSeleccionado ? 'active' : ''} ${esMenor ? 'disabled' : ''}`}
+                                onClick={() => {
+                                  setBilleteSeleccionado(b)
+                                  setMontoPersonalizado('')
+                                }}
+                                title={esMenor ? `El billete de $${b} es menor al total ($${total.toFixed(2)})` : `Pagar con billete de $${b}`}
+                              >
+                                ${b}
+                              </button>
+                            )
+                          })}
+                          <button
+                            type="button"
+                            className={`shop-billete-btn ${billeteSeleccionado === 'otro' ? 'active' : ''}`}
+                            onClick={() => {
+                              setBilleteSeleccionado('otro')
+                              if (!montoPersonalizado) setMontoPersonalizado(Math.ceil(total).toString())
+                            }}
+                          >
+                            Otro monto
+                          </button>
+                        </div>
+
+                        {billeteSeleccionado === 'otro' && (
+                          <div className="shop-custom-monto-box">
+                            <span>Ingresa la cantidad exacta con la que pagarás:</span>
+                            <div className="shop-input-prefix-box">
+                              <span className="prefix">$</span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min={total}
+                                className="shop-input"
+                                placeholder={total.toFixed(2)}
+                                value={montoPersonalizado}
+                                onChange={(e) => setMontoPersonalizado(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Cálculo visual de Vuelto en Vivo */}
+                        {montoPagaCon !== null && (
+                          <div className={`shop-vuelto-summary ${montoPagaCon < total ? 'insuficiente' : ''}`}>
+                            {montoPagaCon < total ? (
+                              <div className="shop-vuelto-error">
+                                <AlertCircle size={15} />
+                                <span>El monto ingresado (${montoPagaCon.toFixed(2)}) es menor al total a pagar (${total.toFixed(2)}).</span>
+                              </div>
+                            ) : (
+                              <div className="shop-vuelto-breakdown">
+                                <div className="vuelto-row">
+                                  <span>Pagas con billete:</span>
+                                  <strong>${montoPagaCon.toFixed(2)}</strong>
+                                </div>
+                                <div className="vuelto-row">
+                                  <span>Total del pedido:</span>
+                                  <span>${total.toFixed(2)}</span>
+                                </div>
+                                <div className="vuelto-row highlight">
+                                  <span>Tu vuelto a recibir:</span>
+                                  <strong className="vuelto-amount">${vueltoCalculado.toFixed(2)}</strong>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <PaymentDetails key={metodo} method={metodo} total={total} customer />
 
                 {error && <p className="shop-error">{error}</p>}
@@ -1029,6 +1196,32 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               </div>
             </div>
 
+            {/* Información destacada de Vuelto si pagó en Efectivo */}
+            {confirmacion.metodoPago === 'Efectivo' && (
+              <div style={{
+                margin: '4px 0',
+                padding: '8px 12px',
+                borderRadius: 10,
+                background: 'rgba(52, 211, 153, 0.1)',
+                border: '1px solid rgba(52, 211, 153, 0.35)',
+                fontSize: '0.82rem',
+                color: '#34d399',
+                textAlign: 'left'
+              }}>
+                {confirmacion.necesitaVuelto ? (
+                  <div>
+                    <strong>💵 Pago en efectivo:</strong> Pagarás con billete de <strong>${confirmacion.montoPagaCon?.toFixed(2)}</strong>.
+                    <br />
+                    <span>🪙 El repartidor llevará tu vuelto de <strong>${confirmacion.vueltoCalculado?.toFixed(2)}</strong>.</span>
+                  </div>
+                ) : (
+                  <div>
+                    <strong>💵 Pago en efectivo:</strong> Monto exacto (${confirmacion.total ? Number(confirmacion.total).toFixed(2) : ''}).
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="shop-destination">
               <MapPin size={15} />
               <span>
@@ -1052,7 +1245,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
             {(() => {
               const m = METODOS.find((x) => x.backend === confirmacion.metodoPago)
               const info = m && PAYMENT_INFO[m.key]
-              return info?.details && (m.key === 'transfer' || m.key === 'online') ? (
+              return info?.details && m.key === 'transfer' ? (
                 <PaymentDetails method={m.key} total={Number(confirmacion.total)} customer />
               ) : null
             })()}

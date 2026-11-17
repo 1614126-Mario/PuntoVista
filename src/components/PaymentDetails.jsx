@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { Banknote, CreditCard, Smartphone, Globe, Copy, Check } from 'lucide-react'
+import { Banknote, CreditCard, Smartphone, Copy, Check } from 'lucide-react'
 import { PAYMENT_INFO } from '../data/paymentInfo'
 
 const ICONS = {
   cash: Banknote,
   card: CreditCard,
-  transfer: Smartphone,
-  online: Globe
+  transfer: Smartphone
 }
 
 export default function PaymentDetails({ method, total, customer = false }) {
@@ -16,7 +15,7 @@ export default function PaymentDetails({ method, total, customer = false }) {
   const info = PAYMENT_INFO[method]
   if (!info) return null
 
-  const Icon = ICONS[method]
+  const Icon = ICONS[method] || Banknote
   const receivedNum = parseFloat(received)
   const change = Number.isFinite(receivedNum) ? receivedNum - total : null
 

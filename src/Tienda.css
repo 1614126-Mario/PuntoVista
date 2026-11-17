@@ -1026,3 +1026,190 @@
   color: var(--purple-200);
   text-align: left;
 }
+
+/* ===== Estilos para Pago en Efectivo y Cálculo de Vuelto ===== */
+.shop-cash-vuelto-card {
+  margin: 0.8rem 0;
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: #150f29;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  text-align: left;
+}
+
+.shop-vuelto-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.shop-vuelto-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  background: #0f0a1e;
+  padding: 0.25rem;
+  border-radius: 9px;
+}
+
+.shop-vuelto-btn {
+  padding: 0.5rem 0.6rem;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.shop-vuelto-btn.active {
+  background: #231645;
+  color: #fff;
+  border: 1px solid var(--purple-400);
+}
+
+.shop-vuelto-selector-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-top: 0.3rem;
+}
+
+.shop-vuelto-label {
+  font-size: 0.78rem;
+  color: #c4b5fd;
+  font-weight: 600;
+}
+
+.shop-billetes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+}
+
+.shop-billete-btn {
+  padding: 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: #110d21;
+  color: #f3f4f6;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.shop-billete-btn:hover:not(:disabled) {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.shop-billete-btn.active {
+  border-color: #34d399;
+  background: #134e38;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.2);
+}
+
+.shop-billete-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: #374151;
+  color: #6b7280;
+}
+
+.shop-custom-monto-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.shop-input-prefix-box {
+  display: flex;
+  align-items: center;
+  background: #110d21;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding-left: 0.6rem;
+}
+
+.shop-input-prefix-box .prefix {
+  color: #34d399;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.shop-input-prefix-box input {
+  border: none;
+  background: transparent;
+  color: #fff;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.shop-input-prefix-box input:focus {
+  outline: none;
+}
+
+.shop-vuelto-summary {
+  margin-top: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.shop-vuelto-summary.insuficiente {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.shop-vuelto-error {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #f87171;
+  font-size: 0.8rem;
+}
+
+.shop-vuelto-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+}
+
+.vuelto-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #cbd5e1;
+}
+
+.vuelto-row.highlight {
+  margin-top: 0.3rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed rgba(52, 211, 153, 0.35);
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.vuelto-amount {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #34d399;
+  letter-spacing: 0.02em;
+}

@@ -1354,14 +1354,7 @@ export default function App() {
                     <CheckCircle2 size={16} />
                     <span>Transf.</span>
                   </button>
-                  <button
-                    type="button"
-                    className={`btn-payment-method ${paymentMethod === 'online' ? 'active' : ''}`}
-                    onClick={() => setPaymentMethod('online')}
-                  >
-                    <Globe size={16} />
-                    <span>En Línea</span>
-                  </button>
+                  
                 </div>
 
                 <PaymentDetails key={paymentMethod} method={paymentMethod} total={grandTotal} />
