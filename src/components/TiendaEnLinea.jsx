@@ -509,20 +509,6 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               <span>Mis pedidos</span>
               {misPedidos.length > 0 && <span className="shop-count">{misPedidos.length}</span>}
             </button>
-
-            {/* Botón de acceso para empleados (cajero, mesero, admin) */}
-            {onAccesoPersonal && (
-              <button
-                type="button"
-                className="shop-btn-ghost"
-                onClick={onAccesoPersonal}
-                title="Acceso para cajeros, meseros y administradores"
-                style={{ borderColor: 'rgba(160,0,255,0.4)', color: 'rgba(200,120,255,0.9)' }}
-              >
-                <LogIn size={15} />
-                <span>Empleados</span>
-              </button>
-            )}
           </div>
         </div>
       </header>
@@ -1321,32 +1307,11 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
         </div>
       )}
 
-      {/* Pie de página con enlace discreto exclusivo para personal */}
+      {/* Pie de página */}
       <footer className="shop-footer" style={{ marginTop: '3.5rem', padding: '2rem 1rem 1.5rem', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', margin: '0 0 0.5rem' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', margin: 0 }}>
           © {new Date().getFullYear()} La Taberna de los Morenazos • Comida Gourmet & Pupusas Tradicionales
         </p>
-        {onAccesoPersonal && (
-          <button
-            type="button"
-            onClick={onAccesoPersonal}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'rgba(255,255,255,0.22)',
-              fontSize: '0.73rem',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '4px 8px',
-              borderRadius: '6px'
-            }}
-            title="Acceso restringido para personal (cajero, mesero, admin)"
-          >
-            <Lock size={11} /> Portal de Empleados
-          </button>
-        )}
       </footer>
 
       {toast && <div className="shop-toast">{toast}</div>}
