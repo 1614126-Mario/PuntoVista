@@ -31,12 +31,18 @@ export const pedidoPublicoService = {
     return creado
   },
 
-  /** Consulta el estado actual de un pedido por su folio. */
+  /** Consulta el estado actual de un pedido por su folio garantizando datos frescos */
   async consultarPedido(folio) {
     let response
     try {
-      response = await fetch(`${API_BASE}/api/publico/pedidos/${encodeURIComponent(folio)}`, {
-        headers: { Accept: 'application/json' }
+      const url = `${API_BASE}/api/publico/pedidos/${encodeURIComponent(folio)}?_t=${Date.now()}`
+      response = await fetch(url, {
+        cache: 'no-store',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       })
     } catch {
       throw new Error('No pudimos conectar con el restaurante.')

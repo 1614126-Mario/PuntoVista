@@ -31,6 +31,16 @@ export default function HistorialFacturas({
   const [filterTipo, setFilterTipo] = useState(filtroInicial) // 'ALL' | 'LOCAL' | 'EN_LINEA' | 'LLEVAR' | 'DEBEN'
   const [eliminando, setEliminando] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [recargando, setRecargando] = useState(false)
+
+  const handleRecargarManual = async () => {
+    setRecargando(true)
+    try {
+      if (onRecargar) await onRecargar()
+    } finally {
+      setTimeout(() => setRecargando(false), 600)
+    }
+  }
 
   // Filtrado de ventas
   const filteredVentas = useMemo(() => {
@@ -141,10 +151,13 @@ export default function HistorialFacturas({
           <button
             type="button"
             className="tab-btn"
-            onClick={onRecargar}
-            title="Actualizar listado de facturas"
+            onClick={handleRecargarManual}
+            disabled={recargando}
+            title="Forzar actualización inmediata desde el servidor"
+            style={{ minWidth: 110, justifyContent: 'center' }}
           >
-            <RotateCcw size={16} /> Actualizar
+            <RotateCcw size={16} style={{ animation: recargando ? 'rune-spin 0.6s linear infinite' : 'none' }} />
+            <span>{recargando ? 'Cargando...' : 'Actualizar'}</span>
           </button>
 
           <button

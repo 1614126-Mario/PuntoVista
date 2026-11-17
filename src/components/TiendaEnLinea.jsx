@@ -153,6 +153,21 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
   const [estados, setEstados] = useState({})
   const [folioBusqueda, setFolioBusqueda] = useState('')
   const [errorBusqueda, setErrorBusqueda] = useState('')
+  const [actualizandoFolio, setActualizandoFolio] = useState(null)
+
+  const handleActualizarEstadoPedido = async (folio) => {
+    setActualizandoFolio(folio)
+    try {
+      const data = await refrescarEstado(folio)
+      if (data) {
+        mostrarToast(`Estado de ${folio}: ${data.estado || 'Actualizado'}`, 'success')
+      } else {
+        mostrarToast(`Pedido ${folio} sincronizado con el restaurante.`, 'info')
+      }
+    } finally {
+      setTimeout(() => setActualizandoFolio(null), 500)
+    }
+  }
 
   const eliminarPedidoDeMisPedidos = async (folio) => {
     try {
@@ -597,8 +612,15 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                     <div className="shop-order-foot">
                       <strong>{money(det?.total ?? p.total)}</strong>
                       <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                        <button type="button" className="shop-btn-ghost" onClick={() => refrescarEstado(p.folio)} title="Actualizar estado del pedido">
-                          <RotateCcw size={14} /> Actualizar
+                        <button
+                          type="button"
+                          className="shop-btn-ghost"
+                          onClick={() => handleActualizarEstadoPedido(p.folio)}
+                          disabled={actualizandoFolio === p.folio}
+                          title="Actualizar estado del pedido en tiempo real"
+                        >
+                          <RotateCcw size={14} style={{ animation: actualizandoFolio === p.folio ? 'rune-spin 0.6s linear infinite' : 'none' }} />
+                          <span>{actualizandoFolio === p.folio ? 'Cargando...' : 'Actualizar'}</span>
                         </button>
                         <button
                           type="button"

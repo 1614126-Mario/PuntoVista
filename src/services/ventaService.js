@@ -10,14 +10,18 @@ export const ventaService = {
   estadoServidor: 'ok',
 
   /**
-   * Obtiene la lista de todas las ventas / facturas realizadas
+   * Obtiene la lista de todas las ventas / facturas realizadas (siempre datos frescos sin caché)
    */
   async getVentas() {
     try {
-      const response = await fetch(`${API_BASE}/api/ventas`, {
+      const url = `${API_BASE}/api/ventas?_t=${Date.now()}`
+      const response = await fetch(url, {
         method: 'GET',
+        cache: 'no-store',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         },
         credentials: 'include'
       })
