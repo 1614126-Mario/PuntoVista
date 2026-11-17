@@ -1057,6 +1057,26 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               ) : null
             })()}
 
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+              <a
+                href={`https://puntoventarect.onrender.com/api/publico/pedidos/${confirmacion.folio}/factura`}
+                target="_blank"
+                rel="noreferrer"
+                className="shop-btn-primary"
+                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0.65rem' }}
+              >
+                <FileText size={16} /> Ver Factura Electrónica Oficial
+              </a>
+
+              <a
+                href={`mailto:${form.email || clienteActivo?.email || ''}?subject=Factura Electrónica ${confirmacion.folio} - La Taberna de los Morenazos&body=Hola ${form.nombre || clienteActivo?.nombre}, tu pedido ${confirmacion.folio} por un total de $${confirmacion.total} ha sido registrado. Puedes consultar tu comprobante oficial aquí: https://puntoventarect.onrender.com/api/publico/pedidos/${confirmacion.folio}/factura`}
+                className="shop-btn-ghost"
+                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0.65rem' }}
+              >
+                <Mail size={16} /> Enviar copia a mi correo personal
+              </a>
+            </div>
+
             <button
               type="button"
               className="shop-btn-primary shop-submit"
