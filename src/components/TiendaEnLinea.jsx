@@ -138,14 +138,9 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
   const [authTab, setAuthTab] = useState('login') // 'login' | 'registro'
   const [authError, setAuthError] = useState('')
   const [authForm, setAuthForm] = useState({
-    identificador: '', // DUI o Correo para login
+    identificador: '', // Correo o DUI para login
     password: '',
-    nombre: '',
-    dui: '',
-    telefono: '',
     email: '',
-    direccion: '',
-    referencia: '',
     nuevaPassword: ''
   })
 
@@ -277,24 +272,20 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     return () => clearInterval(id)
   }, [confirmacion, vista, misPedidos, refrescarEstado])
 
-  // Manejo de Registro de Cliente
+  // Manejo de Registro de Cliente: Solo pide Correo y Contraseña
   const handleRegistroCliente = (e) => {
     e.preventDefault()
     setAuthError('')
 
-    const nombre = authForm.nombre.trim()
-    const dui = formatearDui(authForm.dui.trim())
-    const telefono = authForm.telefono.trim()
     const email = authForm.email.trim().toLowerCase()
-    const direccion = authForm.direccion.trim()
     const password = authForm.nuevaPassword.trim()
 
-    if (!nombre) return setAuthError('Ingresa tu nombre completo.')
-    if (!esDuiValido(dui)) return setAuthError('Ingresa un número de DUI salvadoreño válido (ejemplo: 12345678-9).')
-    if (telefono.length < 8) return setAuthError('Ingresa un número de teléfono de contacto válido.')
-    if (!email || !email.includes('@')) return setAuthError('Ingresa un correo electrónico válido.')
-    if (direccion.length < 10) return setAuthError('Ingresa tu dirección completa de entrega.')
-    if (password.length < 4) return setAuthError('Crea una contraseña de al menos 4 caracteres.')
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      return setAuthError('Ingresa un correo electrónico válido (ejemplo: tu@correo.com).')
+    }
+    if (password.length < 4) {
+      return setAuthError('Crea una contraseña de al menos 4 caracteres.')
+    }
 
     // Obtener clientes registrados
     let registrados = []
@@ -304,22 +295,19 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
       registrados = []
     }
 
-    // Comprobar duplicados por DUI o correo
-    if (registrados.some((c) => c.dui === dui)) {
-      return setAuthError('Ya existe una cuenta registrada con este DUI. Inicia sesión.')
-    }
-    if (registrados.some((c) => c.email === email)) {
+    // Comprobar si el correo ya existe
+    if (registrados.some((c) => (c.email || '').toLowerCase() === email)) {
       return setAuthError('Ya existe una cuenta con este correo electrónico. Inicia sesión.')
     }
 
     const nuevoCliente = {
-      nombre,
-      dui,
-      telefono,
       email,
-      direccion,
-      referencia: authForm.referencia.trim(),
-      password
+      password,
+      nombre: '',
+      dui: '',
+      telefono: '',
+      direccion: '',
+      referencia: ''
     }
 
     registrados.push(nuevoCliente)
@@ -329,7 +317,13 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     setClienteActivo(nuevoCliente)
     setAuthModalOpen(false)
     setAuthError('')
-    mostrarToast(`¡Bienvenido ${nuevoCliente.nombre}! Registro completado.`)
+    setAuthForm({
+      identificador: email,
+      password: '',
+      email: '',
+      nuevaPassword: ''
+    })
+    mostrarToast('¡Cuenta creada exitosamente! Bienvenido.')
   }
 
   // Manejo de Login de Cliente
@@ -340,7 +334,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     const idInput = authForm.identificador.trim().toLowerCase()
     const pass = authForm.password.trim()
 
-    if (!idInput) return setAuthError('Ingresa tu DUI o correo electrónico.')
+    if (!idInput) return setAuthError('Ingresa tu correo electrónico.')
     if (!pass) return setAuthError('Ingresa tu contraseña.')
 
     let registrados = []
@@ -350,22 +344,22 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
       registrados = []
     }
 
-    // Buscar coincidencia por DUI o por Correo
+    // Buscar coincidencia por Correo o DUI (retrocompatibilidad)
     const encontrado = registrados.find((c) => {
-      const matchDui = c.dui.toLowerCase() === idInput || c.dui.replace(/-/g, '') === idInput.replace(/-/g, '')
-      const matchEmail = c.email.toLowerCase() === idInput
-      return (matchDui || matchEmail) && c.password === pass
+      const matchEmail = (c.email || '').toLowerCase() === idInput
+      const matchDui = c.dui && (c.dui.toLowerCase() === idInput || c.dui.replace(/-/g, '') === idInput.replace(/-/g, ''))
+      return (matchEmail || matchDui) && c.password === pass
     })
 
     if (!encontrado) {
-      return setAuthError('Credenciales incorrectas o usuario no registrado.')
+      return setAuthError('Correo o contraseña incorrectos.')
     }
 
     localStorage.setItem('taberna_cliente_activo', JSON.stringify(encontrado))
     setClienteActivo(encontrado)
     setAuthModalOpen(false)
     setAuthError('')
-    mostrarToast(`¡Hola de nuevo, ${encontrado.nombre}!`)
+    mostrarToast(`¡Hola de nuevo${encontrado.nombre ? `, ${encontrado.nombre}` : ''}!`)
   }
 
   const cerrarSesionCliente = () => {
@@ -386,12 +380,12 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     if (!clienteActivo) {
       setAuthTab('registro')
       setAuthModalOpen(true)
-      return setError('Para realizar tu pedido debes registrarte o iniciar sesión con tus documentos oficiales.')
+      return setError('Para realizar tu pedido debes registrarte o iniciar sesión con tu correo.')
     }
 
-    if (!form.nombre.trim()) return setError('Indica tu nombre completo.')
+    if (!form.nombre.trim()) return setError('Indica tu nombre completo para la factura y la entrega.')
     if (!esDuiValido(form.dui)) {
-      return setError('Debes ingresar un número de DUI salvadoreño válido (ejemplo: 12345678-9).')
+      return setError('Debes ingresar tu DUI salvadoreño válido (ejemplo: 12345678-9) para que figure en la factura oficial.')
     }
     if (form.telefono.trim().length < 8) return setError('Indica un teléfono de contacto válido.')
     if (form.direccion.trim().length < 10) return setError('Indica la dirección completa a donde enviaremos tu pedido.')
@@ -432,6 +426,34 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
       creado.necesitaVuelto = necesitaVuelto
       creado.montoPagaCon = montoPagaCon
       creado.vueltoCalculado = vueltoCalculado
+
+      // Guardar y actualizar el DUI y datos de facturación en el perfil del cliente para futuros pedidos
+      if (clienteActivo) {
+        const clienteActualizado = {
+          ...clienteActivo,
+          nombre: form.nombre.trim(),
+          dui: form.dui.trim(),
+          telefono: form.telefono.trim(),
+          email: form.email.trim() || clienteActivo.email,
+          direccion: form.direccion.trim(),
+          referencia: form.referencia.trim()
+        }
+        setClienteActivo(clienteActualizado)
+        localStorage.setItem('taberna_cliente_activo', JSON.stringify(clienteActualizado))
+
+        try {
+          const reg = JSON.parse(localStorage.getItem('taberna_clientes_registrados') || '[]')
+          const idx = reg.findIndex((c) => (c.email || '').toLowerCase() === clienteActivo.email.toLowerCase())
+          if (idx >= 0) {
+            reg[idx] = clienteActualizado
+          } else {
+            reg.push(clienteActualizado)
+          }
+          localStorage.setItem('taberna_clientes_registrados', JSON.stringify(reg))
+        } catch (err) {
+          console.warn('Error guardando perfil actualizado de cliente:', err)
+        }
+      }
 
       setConfirmacion(creado)
       setEstados((prev) => ({ ...prev, [creado.folio]: creado }))
@@ -518,8 +540,8 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                   <User size={13} />
                 </div>
                 <div className="shop-client-badge-text">
-                  <strong>{clienteActivo.nombre.split(' ')[0]}</strong>
-                  <small>DUI: {clienteActivo.dui}</small>
+                  <strong>{(clienteActivo.nombre ? clienteActivo.nombre.split(' ')[0] : clienteActivo.email?.split('@')[0]) || 'Mi Cuenta'}</strong>
+                  <small>{clienteActivo.dui ? `DUI: ${clienteActivo.dui}` : clienteActivo.email}</small>
                 </div>
                 <button
                   type="button"
@@ -763,8 +785,8 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                   <div className="shop-auth-callout">
                     <ShieldCheck size={22} className="shop-auth-callout-icon" />
                     <div>
-                      <strong>Identificación requerida</strong>
-                      <p>Para hacer tu pedido debes registrarte o iniciar sesión con tus documentos oficiales (DUI).</p>
+                      <strong>Inicia sesión para ordenar</strong>
+                      <p>Regístrate fácilmente solo con tu correo y contraseña para realizar tu pedido.</p>
                     </div>
                     <button
                       type="button"
@@ -798,10 +820,10 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                   />
                 </label>
 
-                {/* Campo DUI Obligatorio con formato salvadoreño */}
+                {/* Campo DUI Obligatorio para Facturación Oficial */}
                 <label className="shop-field">
                   <span>
-                    <FileText size={13} /> DUI (Documento Único de Identidad) *
+                    <FileText size={13} /> DUI para la Factura (Documento Único de Identidad) *
                   </span>
                   <input
                     className="shop-input"
@@ -811,7 +833,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                     maxLength={10}
                     required
                   />
-                  <small className="shop-field-tip">Formato salvadoreño de 9 dígitos (ej: 01234567-8)</small>
+                  <small className="shop-field-tip">Requerido para emitir tu factura electrónica fiscal. Formato: 12345678-9</small>
                 </label>
 
                 <label className="shop-field">
@@ -1061,8 +1083,8 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               <h2>{authTab === 'login' ? 'Iniciar Sesión' : 'Registro de Cliente'}</h2>
               <p className="shop-muted">
                 {authTab === 'login'
-                  ? 'Ingresa con tu DUI o correo para continuar con tu pedido.'
-                  : 'Registra tus documentos y datos reales para la entrega y facturación.'}
+                  ? 'Ingresa con tu correo y contraseña para continuar con tu pedido.'
+                  : 'Crea tu cuenta rápidamente solo con tu correo y contraseña.'}
               </p>
             </div>
 
@@ -1095,14 +1117,16 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               <form onSubmit={handleLoginCliente} className="shop-auth-form">
                 <label className="shop-field">
                   <span>
-                    <User size={13} /> DUI o Correo Electrónico
+                    <Mail size={13} /> Correo Electrónico
                   </span>
                   <input
+                    type="email"
                     className="shop-input"
-                    placeholder="01234567-8 o tu@correo.com"
+                    placeholder="tu@correo.com"
                     value={authForm.identificador}
                     onChange={(e) => setAuthForm({ ...authForm, identificador: e.target.value })}
                     required
+                    autoFocus
                   />
                 </label>
 
@@ -1141,85 +1165,18 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               <form onSubmit={handleRegistroCliente} className="shop-auth-form">
                 <label className="shop-field">
                   <span>
-                    <User size={13} /> Nombre completo *
+                    <Mail size={13} /> Correo electrónico *
                   </span>
                   <input
                     className="shop-input"
-                    placeholder="Nombres y Apellidos"
-                    value={authForm.nombre}
-                    onChange={(e) => setAuthForm({ ...authForm, nombre: e.target.value })}
+                    type="email"
+                    placeholder="tu@correo.com"
+                    value={authForm.email}
+                    onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
                     required
+                    autoFocus
                   />
-                </label>
-
-                <label className="shop-field">
-                  <span>
-                    <FileText size={13} /> DUI (Documento Único de Identidad) *
-                  </span>
-                  <input
-                    className="shop-input"
-                    placeholder="00000000-0"
-                    value={authForm.dui}
-                    onChange={(e) => setAuthForm({ ...authForm, dui: formatearDui(e.target.value) })}
-                    maxLength={10}
-                    required
-                  />
-                  <small className="shop-field-tip">Ingresa tu DUI oficial (ej: 01234567-8)</small>
-                </label>
-
-                <div className="shop-grid-2col">
-                  <label className="shop-field">
-                    <span>
-                      <Phone size={13} /> Teléfono *
-                    </span>
-                    <input
-                      className="shop-input"
-                      type="tel"
-                      placeholder="7000-0000"
-                      value={authForm.telefono}
-                      onChange={(e) => setAuthForm({ ...authForm, telefono: e.target.value })}
-                      required
-                    />
-                  </label>
-                  <label className="shop-field">
-                    <span>
-                      <Mail size={13} /> Correo *
-                    </span>
-                    <input
-                      className="shop-input"
-                      type="email"
-                      placeholder="correo@ejemplo.com"
-                      value={authForm.email}
-                      onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-                      required
-                    />
-                  </label>
-                </div>
-
-                <label className="shop-field">
-                  <span>
-                    <MapPin size={13} /> Dirección completa de entrega *
-                  </span>
-                  <textarea
-                    className="shop-input"
-                    rows={2}
-                    placeholder="Colonia, calle, número de casa, municipio"
-                    value={authForm.direccion}
-                    onChange={(e) => setAuthForm({ ...authForm, direccion: e.target.value })}
-                    required
-                  />
-                </label>
-
-                <label className="shop-field">
-                  <span>
-                    <MapPin size={13} /> Punto de referencia
-                  </span>
-                  <input
-                    className="shop-input"
-                    placeholder="Ej: portón negro, frente al parque"
-                    value={authForm.referencia}
-                    onChange={(e) => setAuthForm({ ...authForm, referencia: e.target.value })}
-                  />
+                  <small className="shop-field-tip">Te enviaremos a este correo la confirmación de tus compras y tu factura.</small>
                 </label>
 
                 <label className="shop-field">
@@ -1229,7 +1186,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                   <input
                     type="password"
                     className="shop-input"
-                    placeholder="Crea una contraseña segura"
+                    placeholder="Crea una contraseña segura (mínimo 4 caracteres)"
                     value={authForm.nuevaPassword}
                     onChange={(e) => setAuthForm({ ...authForm, nuevaPassword: e.target.value })}
                     required
@@ -1249,7 +1206,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                       setAuthError('')
                     }}
                   >
-                    Inicia sesión
+                    Inicia sesión aquí
                   </button>
                 </p>
               </form>
