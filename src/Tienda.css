@@ -603,9 +603,182 @@
   padding: 1.2rem 0.5rem;
 }
 
-.shop-cart-fab {
-  display: none;
+
+/* === BOTÓN FLOTANTE DE COMPRAR (DESKTOP Y MÓVIL) === */
+.shop-floating-buy-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 999;
+  display: flex;
+  filter: drop-shadow(0 10px 25px rgba(124, 58, 237, 0.5));
 }
+
+.shop-cart-fab.shop-btn-comprar-flotante {
+  display: flex !important;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.shop-cart-fab.shop-btn-comprar-flotante:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 35px rgba(168, 85, 247, 0.8);
+  background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
+}
+
+.shop-cart-fab.shop-btn-comprar-flotante.has-items {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6);
+  animation: pulseBuyGlow 2.5s infinite;
+}
+
+.shop-cart-fab.shop-btn-comprar-flotante.has-items:hover {
+  background: linear-gradient(135deg, #047857 0%, #34d399 100%);
+  box-shadow: 0 12px 35px rgba(52, 211, 153, 0.8);
+}
+
+@keyframes pulseBuyGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6), 0 8px 25px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0), 0 12px 30px rgba(16, 185, 129, 0.8);
+  }
+}
+
+.shop-buy-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.shop-buy-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  border: 2px solid #110d21;
+}
+
+.shop-buy-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.shop-buy-action {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.shop-buy-sub {
+  font-size: 0.78rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.shop-buy-arrow {
+  margin-left: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.shop-cart-fab.shop-btn-comprar-flotante:hover .shop-buy-arrow {
+  transform: translateX(4px);
+}
+
+/* Dock flotante/sticky dentro del drawer del carrito */
+.shop-cart-floating-dock {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(17, 13, 33, 0.96) 0%, #0d091a 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  margin-top: 1rem;
+}
+
+.shop-dock-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.shop-dock-lbl {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.shop-dock-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+.shop-submit-dock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.5);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.shop-submit-dock-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(168, 85, 247, 0.7);
+  background: linear-gradient(135deg, #8b5cf6, #c084fc);
+}
+
+@media (max-width: 768px) {
+  .shop-floating-buy-container {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+  .shop-cart-fab.shop-btn-comprar-flotante {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.8rem 1.1rem;
+    border-radius: 14px;
+  }
+}
+
 
 /* Pedidos / seguimiento */
 .shop-section-title {

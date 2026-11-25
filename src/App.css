@@ -3890,3 +3890,204 @@
   color: #fbbf24;
   font-weight: 600;
 }
+
+
+/* ========================================================= */
+/* BOTONES FLOTANTES DE COBROS Y COBRAR EN POS               */
+/* ========================================================= */
+
+/* 1. Botón Flotante para Cobrar Orden Actual */
+.pos-floating-cobro-bar {
+  position: fixed;
+  bottom: 28px;
+  right: 430px; /* Al lado del sidebar de ticket en desktop */
+  z-index: 990;
+  display: flex;
+  filter: drop-shadow(0 10px 25px rgba(124, 58, 237, 0.5));
+}
+
+.btn-pos-floating-cobro {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  animation: pulseCobroGlow 3s infinite;
+}
+
+.btn-pos-floating-cobro:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(168, 85, 247, 0.8);
+  background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
+}
+
+@keyframes pulseCobroGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.5), 0 8px 25px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(168, 85, 247, 0), 0 12px 30px rgba(168, 85, 247, 0.7);
+  }
+}
+
+.floating-cobro-icon-bubble {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.floating-cobro-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: #10b981;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  border: 2px solid #110d21;
+}
+
+.floating-cobro-content {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.floating-cobro-action {
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.floating-cobro-total {
+  font-size: 0.8rem;
+  opacity: 0.95;
+  color: #fef08a;
+  font-weight: 700;
+}
+
+.floating-cobro-arrow {
+  margin-left: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.btn-pos-floating-cobro:hover .floating-cobro-arrow {
+  transform: translateX(4px);
+}
+
+/* 2. Botón Flotante de Acceso a Cobros / Cuentas Pendientes */
+.pos-floating-cobros-pill-wrapper {
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  z-index: 980;
+  display: flex;
+}
+
+.btn-pos-floating-cobros-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: 9999px;
+  background: rgba(18, 13, 33, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s ease;
+}
+
+.btn-pos-floating-cobros-pill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(168, 85, 247, 0.7);
+  background: rgba(28, 19, 53, 0.95);
+  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.35);
+}
+
+.btn-pos-floating-cobros-pill.has-pending {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: linear-gradient(135deg, rgba(24, 16, 46, 0.95), rgba(70, 40, 10, 0.9));
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.3);
+}
+
+.btn-pos-floating-cobros-pill.has-pending:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.5);
+}
+
+.cobros-pill-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c084fc;
+}
+
+.btn-pos-floating-cobros-pill.has-pending .cobros-pill-icon {
+  color: #fbbf24;
+}
+
+.cobros-pill-text {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cobros-pill-label {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.cobros-pill-count {
+  background: #f59e0b;
+  color: #000;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.cobros-pill-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Responsividad en tablet y móvil para los botones flotantes */
+@media (max-width: 1200px) {
+  .pos-floating-cobro-bar {
+    right: 24px;
+    bottom: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pos-floating-cobro-bar {
+    display: none; /* En móvil se utiliza la mobile-cart-bottom-bar que ya cubre toda la pantalla inferior */
+  }
+  .pos-floating-cobros-pill-wrapper {
+    bottom: 80px; /* Queda sobre la barra inferior móvil */
+    left: 12px;
+  }
+}

@@ -29,7 +29,10 @@ import {
   FileText,
   AlertCircle,
   DollarSign,
-  Lock
+  Lock,
+  ArrowRight,
+  ChevronRight,
+  ShoppingBag
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from '../data/initialProducts'
 import { PAYMENT_INFO } from '../data/paymentInfo'
@@ -189,6 +192,12 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     }
   }, [clienteActivo])
 
+  const [displayCount, setDisplayCount] = useState(48)
+
+  useEffect(() => {
+    setDisplayCount(48)
+  }, [category, query])
+
   const productos = useMemo(() => {
     const q = query.toLowerCase().trim()
     return INITIAL_PRODUCTS.filter((p) => {
@@ -197,6 +206,10 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
       return okCat && okQuery
     })
   }, [category, query])
+
+  const visibleProductos = useMemo(() => {
+    return productos.slice(0, displayCount)
+  }, [productos, displayCount])
 
   const subtotal = cart.reduce((acc, it) => acc + it.price * it.quantity, 0)
   const iva = Number((subtotal * IVA_RATE).toFixed(2))
@@ -696,32 +709,65 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
               </div>
             </div>
 
+            <div className="shop-results-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0.5rem 0 1rem', fontSize: '0.85rem', color: '#9ca3af' }}>
+              <span>Mostrando {Math.min(displayCount, productos.length)} de {productos.length.toLocaleString()} platillos y bebidas</span>
+              {productos.length === 4000 && <span style={{ color: '#c084fc', fontWeight: 'bold' }}>⭐ Catálogo completo (4,000 productos)</span>}
+            </div>
+
             {productos.length === 0 ? (
               <div className="shop-empty">
                 <Search size={42} />
                 <p>No encontramos productos con esa búsqueda.</p>
               </div>
             ) : (
-              <div className="shop-grid">
-                {productos.map((p) => (
-                  <article className="shop-card" key={p.id}>
-                    <div className="shop-card-img">
-                      <img src={p.image} alt={p.name} loading="lazy" />
-                      {p.tag && <span className="shop-tag">{p.tag}</span>}
-                    </div>
-                    <div className="shop-card-body">
-                      <h3>{p.name}</h3>
-                      <p>{p.description}</p>
-                      <div className="shop-card-foot">
-                        <strong>{money(p.price)}</strong>
-                        <button type="button" className="shop-btn-primary" onClick={() => agregar(p)}>
-                          <Plus size={16} /> Agregar
-                        </button>
+              <>
+                <div className="shop-grid">
+                  {visibleProductos.map((p) => (
+                    <article className="shop-card" key={p.id}>
+                      <div className="shop-card-img">
+                        <img src={p.image} alt={p.name} loading="lazy" />
+                        {p.tag && <span className="shop-tag">{p.tag}</span>}
                       </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                      <div className="shop-card-body">
+                        <h3>{p.name}</h3>
+                        <p>{p.description}</p>
+                        <div className="shop-card-foot">
+                          <strong>{money(p.price)}</strong>
+                          <button type="button" className="shop-btn-primary" onClick={() => agregar(p)} title="Comprar y agregar al pedido">
+                            <Plus size={16} /> Agregar
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                {displayCount < productos.length && (
+                  <div className="shop-load-more-box" style={{ display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
+                    <button
+                      type="button"
+                      className="shop-btn-load-more"
+                      onClick={() => setDisplayCount((prev) => prev + 48)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.75rem 1.75rem',
+                        borderRadius: '9999px',
+                        background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                        color: '#fff',
+                        fontWeight: '700',
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Plus size={18} /> Cargar más productos ({Math.min(displayCount, productos.length)} de {productos.length.toLocaleString()})
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </section>
 
@@ -1047,23 +1093,48 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
 
                 {error && <p className="shop-error">{error}</p>}
 
-                <button
-                  type="submit"
-                  className="shop-btn-primary shop-submit"
-                  disabled={enviando}
-                >
-                  {enviando ? 'Procesando pedido...' : `Confirmar y Pedir (${money(total)})`}
-                </button>
+                {/* BOTÓN STICKY/FLOTANTE DENTRO DEL DRAWER DEL CARRITO */}
+                <div className="shop-cart-floating-dock">
+                  <div className="shop-dock-summary">
+                    <span className="shop-dock-lbl">Total a pagar:</span>
+                    <strong className="shop-dock-val">{money(total)}</strong>
+                  </div>
+                  <button
+                    type="submit"
+                    className="shop-btn-primary shop-submit shop-submit-dock-btn"
+                    disabled={enviando}
+                    title="Comprar y procesar pedido ahora"
+                  >
+                    <CheckCircle2 size={18} />
+                    <span>{enviando ? 'Procesando compra...' : `COMPRAR AHORA (${money(total)})`}</span>
+                  </button>
+                </div>
               </form>
             )}
           </aside>
 
+          {/* BOTÓN FLOTANTE DE COMPRAR (EN EL MENÚ / CATÁLOGO PARA DESKTOP Y MÓVIL) */}
           {!cartOpen && (
-            <button type="button" className="shop-cart-fab" onClick={() => setCartOpen(true)}>
-              <ShoppingCart size={18} />
-              <span>{totalItems === 0 ? 'Tu pedido' : `${totalItems} producto(s)`}</span>
-              <strong>{money(total)}</strong>
-            </button>
+            <div className="shop-floating-buy-container">
+              <button
+                type="button"
+                className={`shop-cart-fab shop-btn-comprar-flotante ${totalItems > 0 ? 'has-items' : ''}`}
+                onClick={() => setCartOpen(true)}
+                title="Comprar - Ver orden y finalizar compra"
+              >
+                <div className="shop-buy-icon-wrap">
+                  <ShoppingCart size={22} />
+                  {totalItems > 0 && <span className="shop-buy-badge">{totalItems}</span>}
+                </div>
+                <div className="shop-buy-info">
+                  <span className="shop-buy-action">{totalItems > 0 ? 'COMPRAR AHORA' : 'TU PEDIDO'}</span>
+                  <span className="shop-buy-sub">
+                    {totalItems === 0 ? 'Vacío' : `${totalItems} prod. • ${money(total)}`}
+                  </span>
+                </div>
+                <ArrowRight size={18} className="shop-buy-arrow" />
+              </button>
+            </div>
           )}
         </main>
       )}

@@ -470,6 +470,17 @@ export default function App() {
     })
   }, [products, activeCategory, searchQuery])
 
+  // Paginación progresiva para rendimiento con 4,000 productos
+  const [displayCount, setDisplayCount] = useState(48)
+
+  useEffect(() => {
+    setDisplayCount(48)
+  }, [activeCategory, searchQuery])
+
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, displayCount)
+  }, [filteredProducts, displayCount])
+
   const totalFoods = products.filter((p) => p.category === 'comida').length
   const totalDrinks = products.filter((p) => p.category === 'bebida').length
 
@@ -983,7 +994,8 @@ export default function App() {
                 </div>
 
                 <div className="results-info">
-                  Mostrando {filteredProducts.length} producto(s)
+                  Mostrando {Math.min(displayCount, filteredProducts.length)} de {filteredProducts.length.toLocaleString()} producto(s)
+                  {products.length === 4000 && <span style={{ color: '#c084fc', fontWeight: 'bold', marginLeft: '6px' }}>• (4,000 en catálogo)</span>}
                 </div>
               </div>
             </div>
@@ -1007,8 +1019,9 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <div className="products-grid">
-                {filteredProducts.map((item) => {
+              <>
+                <div className="products-grid">
+                  {displayedProducts.map((item) => {
                   const isFood = item.category === 'comida'
                   const inCart = cart.find((c) => c.id === item.id)
 
@@ -1091,7 +1104,34 @@ export default function App() {
                   )
                 })}
               </div>
-            )}
+
+              {displayCount < filteredProducts.length && (
+                <div className="catalog-load-more-container" style={{ display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
+                  <button
+                    type="button"
+                    className="btn-catalog-load-more"
+                    onClick={() => setDisplayCount((prev) => prev + 48)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.8rem 2rem',
+                      borderRadius: '9999px',
+                      background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                      color: '#fff',
+                      fontWeight: '800',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 18px rgba(124, 58, 237, 0.5)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <Plus size={18} /> Cargar más productos ({Math.min(displayCount, filteredProducts.length)} de {filteredProducts.length.toLocaleString()})
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           </section>
 
           {/* SECCIÓN DERECHA: TICKET DE VENTA CON CLIENTE Y FACTURACIÓN */}
@@ -1464,6 +1504,65 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* BOTÓN FLOTANTE DE COBRAR (VISIBLE EN PANTALLA COMPLETA CUANDO HAY PRODUCTOS EN LA ORDEN) */}
+          {cart.length > 0 && (
+            <div className="pos-floating-cobro-bar">
+              <button
+                type="button"
+                className="btn-pos-floating-cobro"
+                onClick={() => {
+                  if (currentUser.role === 'mesero') {
+                    handleRegistrarComandaMesero()
+                  } else {
+                    handleCheckout()
+                  }
+                }}
+                title={currentUser.role === 'mesero' ? 'Enviar comanda a cocina y cobrar' : 'Cobrar cuenta actual y emitir factura fiscal'}
+              >
+                <div className="floating-cobro-icon-bubble">
+                  <Receipt size={22} />
+                  <span className="floating-cobro-badge">{totalItemsCount}</span>
+                </div>
+                <div className="floating-cobro-content">
+                  <span className="floating-cobro-action">
+                    {currentUser.role === 'mesero'
+                      ? `COMANDAR (${(tableNumber || 'MESA 1').toUpperCase()})`
+                      : `COBRAR (${(tableNumber || 'MESA 1').toUpperCase()})`}
+                  </span>
+                  <span className="floating-cobro-total">${grandTotal.toFixed(2)} USD • {totalItemsCount} arts.</span>
+                </div>
+                <ChevronRight size={22} className="floating-cobro-arrow" />
+              </button>
+            </div>
+          )}
+
+          {/* BOTÓN FLOTANTE DE ACCESO RÁPIDO A COBROS / CAJA */}
+          <div className="pos-floating-cobros-pill-wrapper">
+            <button
+              type="button"
+              className={`btn-pos-floating-cobros-pill ${pedidosPorCobrar > 0 ? 'has-pending' : ''}`}
+              onClick={() => {
+                if (currentUser.role === 'mesero') {
+                  setActiveView('mesero')
+                } else {
+                  setHistorialFiltro('DEBEN')
+                  setActiveView('historial')
+                }
+              }}
+              title="Acceso directo a Cobros y Cuentas Pendientes"
+            >
+              <div className="cobros-pill-icon">
+                <Receipt size={18} />
+              </div>
+              <div className="cobros-pill-text">
+                <span className="cobros-pill-label">Cobros</span>
+                {pedidosPorCobrar > 0 && (
+                  <span className="cobros-pill-count">{pedidosPorCobrar} por cobrar</span>
+                )}
+              </div>
+            </button>
+          </div>
         </main>
       )}
 

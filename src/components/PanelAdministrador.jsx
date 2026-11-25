@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 
 export default function PanelAdministrador({
@@ -90,6 +92,28 @@ export default function PanelAdministrador({
 
   const totalComidas = products.filter(p => p.category === 'comida').length
   const totalBebidas = products.filter(p => p.category === 'bebida').length
+
+  // Búsqueda y Paginación para el Catálogo de 4,000 Productos
+  const [adminProductSearch, setAdminProductSearch] = useState('')
+  const [adminProductPage, setAdminProductPage] = useState(1)
+  const ADMIN_ITEMS_PER_PAGE = 20
+
+  const filteredAdminProducts = useMemo(() => {
+    const q = adminProductSearch.toLowerCase().trim()
+    if (!q) return products
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      (p.tag && p.tag.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
+      (p.id && p.id.toLowerCase().includes(q))
+    )
+  }, [products, adminProductSearch])
+
+  const totalAdminPages = Math.max(1, Math.ceil(filteredAdminProducts.length / ADMIN_ITEMS_PER_PAGE))
+  const paginatedAdminProducts = useMemo(() => {
+    const start = (adminProductPage - 1) * ADMIN_ITEMS_PER_PAGE
+    return filteredAdminProducts.slice(start, start + ADMIN_ITEMS_PER_PAGE)
+  }, [filteredAdminProducts, adminProductPage])
 
   return (
     <div className="admin-panel-container">
@@ -193,13 +217,30 @@ export default function PanelAdministrador({
       <div className="admin-split-grid">
         {/* Catálogo de Productos Disponibles */}
         <div className="admin-panel-card">
-          <div className="panel-card-header">
+          <div className="panel-card-header" style={{ flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between' }}>
             <div>
               <h3 className="panel-card-title">
                 <Package size={18} color="#38bdf8" />
-                <span>Productos en Catálogo ({products.length})</span>
+                <span>Catálogo de Productos ({products.length.toLocaleString()})</span>
               </h3>
-              <p className="panel-card-desc">Platillos y bebidas dados de alta en el sistema</p>
+              <p className="panel-card-desc">
+                Mostrando {filteredAdminProducts.length.toLocaleString()} resultados • {totalComidas} comidas y {totalBebidas} bebidas
+              </p>
+            </div>
+
+            {/* Buscador de productos */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#130d24', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <Search size={15} color="#9ca3af" />
+              <input
+                type="text"
+                placeholder="Buscar en los 4,000 productos..."
+                value={adminProductSearch}
+                onChange={(e) => {
+                  setAdminProductSearch(e.target.value)
+                  setAdminProductPage(1)
+                }}
+                style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '0.8rem', outline: 'none', width: '180px' }}
+              />
             </div>
           </div>
 
@@ -214,14 +255,14 @@ export default function PanelAdministrador({
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => (
+                {paginatedAdminProducts.map((p) => (
                   <tr key={p.id}>
                     <td>
                       <div className="admin-product-cell">
-                        <img src={p.image} alt={p.name} className="admin-product-thumb" />
+                        <img src={p.image} alt={p.name} className="admin-product-thumb" loading="lazy" />
                         <div>
                           <strong>{p.name}</strong>
-                          <div style={{ fontSize: '0.74rem', color: '#9ca3af' }}>{p.tag || 'Activo'}</div>
+                          <div style={{ fontSize: '0.74rem', color: '#9ca3af' }}>{p.tag || 'Activo'} • ID: {p.id}</div>
                         </div>
                       </div>
                     </td>
@@ -240,6 +281,51 @@ export default function PanelAdministrador({
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Paginación del catálogo */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.82rem', color: '#9ca3af' }}>
+            <span>
+              Página {adminProductPage} de {totalAdminPages} ({filteredAdminProducts.length.toLocaleString()} productos)
+            </span>
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <button
+                type="button"
+                disabled={adminProductPage <= 1}
+                onClick={() => setAdminProductPage((p) => Math.max(1, p - 1))}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.2rem',
+                  padding: '0.35rem 0.6rem',
+                  borderRadius: '6px',
+                  background: adminProductPage <= 1 ? 'rgba(255,255,255,0.04)' : '#1e1438',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: adminProductPage <= 1 ? '#6b7280' : '#fff',
+                  cursor: adminProductPage <= 1 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <ChevronLeft size={14} /> Anterior
+              </button>
+              <button
+                type="button"
+                disabled={adminProductPage >= totalAdminPages}
+                onClick={() => setAdminProductPage((p) => Math.min(totalAdminPages, p + 1))}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.2rem',
+                  padding: '0.35rem 0.6rem',
+                  borderRadius: '6px',
+                  background: adminProductPage >= totalAdminPages ? 'rgba(255,255,255,0.04)' : '#1e1438',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: adminProductPage >= totalAdminPages ? '#6b7280' : '#fff',
+                  cursor: adminProductPage >= totalAdminPages ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Siguiente <ChevronRight size={14} />
+              </button>
+            </div>
           </div>
         </div>
 
