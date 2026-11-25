@@ -106,6 +106,29 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
   const [error, setError] = useState('')
   const [confirmacion, setConfirmacion] = useState(null)
   const [toast, setToast] = useState('')
+  const formRef = useRef(null)
+
+  const handleFloatingBuyClick = () => {
+    if (cart.length === 0) {
+      setCartOpen(true)
+      mostrarToast('Tu pedido está vacío. Agrega platillos o bebidas para comprar.')
+      return
+    }
+
+    if (!cartOpen) {
+      setCartOpen(true)
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    } else {
+      // Si el carrito ya está abierto, el cliente compra directamente con el botón flotante
+      if (formRef.current) {
+        formRef.current.requestSubmit()
+      }
+    }
+  }
 
   // ── Acceso secreto al panel de empleados: 5 clics rápidos en el logo ──
   const logoClicksRef = useRef(0)
@@ -787,7 +810,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                 <p>Tu pedido está vacío. Agrega algo del menú para empezar.</p>
               </div>
             ) : (
-              <form onSubmit={enviarPedido} className="shop-form">
+              <form ref={formRef} onSubmit={enviarPedido} className="shop-form">
                 <ul className="shop-cart-items">
                   {cart.map((i) => (
                     <li key={i.id}>
@@ -1113,29 +1136,32 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
             )}
           </aside>
 
-          {/* BOTÓN FLOTANTE DE COMPRAR (EN EL MENÚ / CATÁLOGO PARA DESKTOP Y MÓVIL) */}
-          {!cartOpen && (
-            <div className="shop-floating-buy-container">
-              <button
-                type="button"
-                className={`shop-cart-fab shop-btn-comprar-flotante ${totalItems > 0 ? 'has-items' : ''}`}
-                onClick={() => setCartOpen(true)}
-                title="Comprar - Ver orden y finalizar compra"
-              >
-                <div className="shop-buy-icon-wrap">
-                  <ShoppingCart size={22} />
-                  {totalItems > 0 && <span className="shop-buy-badge">{totalItems}</span>}
-                </div>
-                <div className="shop-buy-info">
-                  <span className="shop-buy-action">{totalItems > 0 ? 'COMPRAR AHORA' : 'TU PEDIDO'}</span>
-                  <span className="shop-buy-sub">
-                    {totalItems === 0 ? 'Vacío' : `${totalItems} prod. • ${money(total)}`}
-                  </span>
-                </div>
-                <ArrowRight size={18} className="shop-buy-arrow" />
-              </button>
-            </div>
-          )}
+          {/* BOTÓN FLOTANTE DE COMPRAR (SIEMPRE VISIBLE PARA LOS CLIENTES EN TODAS LAS RESOLUCIONES, AUN CUANDO COMPRAN O REVISAN) */}
+          <div className={`shop-floating-buy-container ${cartOpen ? 'cart-is-open' : ''}`}>
+            <button
+              type="button"
+              className={`shop-cart-fab shop-btn-comprar-flotante ${totalItems > 0 ? 'has-items' : ''} ${cartOpen ? 'btn-buying-mode' : ''}`}
+              onClick={handleFloatingBuyClick}
+              disabled={enviando}
+              title={cartOpen ? "Confirmar y procesar tu compra ahora" : "Comprar ahora - Ver pedido"}
+            >
+              <div className="shop-buy-icon-wrap">
+                <ShoppingCart size={22} />
+                {totalItems > 0 && <span className="shop-buy-badge">{totalItems}</span>}
+              </div>
+              <div className="shop-buy-info">
+                <span className="shop-buy-action">
+                  {cartOpen
+                    ? (enviando ? 'PROCESANDO...' : 'CONFIRMAR Y COMPRAR')
+                    : (totalItems > 0 ? 'COMPRAR AHORA' : 'TU PEDIDO')}
+                </span>
+                <span className="shop-buy-sub">
+                  {totalItems === 0 ? '0 productos' : `${totalItems} prod. • ${money(total)}`}
+                </span>
+              </div>
+              <ArrowRight size={18} className="shop-buy-arrow" />
+            </button>
+          </div>
         </main>
       )}
 

@@ -609,9 +609,22 @@
   position: fixed;
   bottom: 28px;
   right: 28px;
-  z-index: 999;
+  z-index: 99999 !important;
   display: flex;
   filter: drop-shadow(0 10px 25px rgba(124, 58, 237, 0.5));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shop-cart-fab.shop-btn-comprar-flotante.btn-buying-mode {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  border-color: rgba(52, 211, 153, 0.7) !important;
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.8) !important;
+  animation: pulseBuyGlow 2s infinite !important;
+}
+
+.shop-cart-fab.shop-btn-comprar-flotante.btn-buying-mode:hover {
+  background: linear-gradient(135deg, #047857 0%, #34d399 100%) !important;
+  transform: translateY(-3px) scale(1.04) !important;
 }
 
 .shop-cart-fab.shop-btn-comprar-flotante {
@@ -993,12 +1006,23 @@
     display: inline-flex;
   }
 
+  .shop-floating-buy-container {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    z-index: 99999 !important;
+  }
+
+  .shop-cart.open .shop-form {
+    padding-bottom: 6rem;
+  }
+
   .shop-cart-fab {
     position: fixed;
     left: 12px;
     right: 12px;
     bottom: 12px;
-    z-index: 60;
+    z-index: 99999 !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
