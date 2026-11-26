@@ -551,3 +551,258 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Nav: 7 Reportes ─────────────────────────────────────────────────── */
+.rv-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.rv-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: #9ca3af;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.rv-nav-btn:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #e2e8f0;
+}
+
+.rv-nav-active {
+  background: linear-gradient(135deg, #7c3aed, #9333ea) !important;
+  border-color: #a855f7 !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+}
+
+.rv-nav-icon {
+  font-size: 1.1rem;
+}
+
+.rv-nav-label {
+  font-size: 0.84rem;
+}
+
+/* ── Panel de cada reporte ───────────────────────────────────────────── */
+.rv-report-panel {
+  animation: rv-fadein 0.25s ease;
+}
+
+@keyframes rv-fadein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Section Header (título + botones) ──────────────────────────────── */
+.rv-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(168,85,247,0.06));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 14px;
+}
+
+.rv-section-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 0.3rem 0;
+}
+
+.rv-section-sub {
+  font-size: 0.84rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.rv-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* ── Filtros globales ───────────────────────────────────────────────── */
+.rv-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 1rem 1.25rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.rv-filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rv-filtro-grupo label {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Inputs y Selects ───────────────────────────────────────────────── */
+.rv-input {
+  background: #120f1d;
+  color: #f1f5f9;
+  border: 1px solid rgba(168,85,247,0.3);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.rv-input:focus {
+  border-color: #a855f7;
+}
+
+.rv-input-wide {
+  min-width: 260px;
+}
+
+.rv-select {
+  background: #1e1b2e;
+  color: #e2e8f0;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.rv-select option {
+  background: #1a1628;
+}
+
+/* ── Search row + result count ──────────────────────────────────────── */
+.rv-search-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.rv-result-count {
+  font-size: 0.82rem;
+  color: #c084fc;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Alert Box (info) ───────────────────────────────────────────────── */
+.rv-alert-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #fde68a;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.rv-alert-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* ── Tag chip ───────────────────────────────────────────────────────── */
+.rv-tag {
+  display: inline-block;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.rv-tag-red {
+  background: rgba(248,113,113,0.1);
+  color: #f87171;
+  border-color: rgba(248,113,113,0.25);
+}
+
+/* ── Paginador ──────────────────────────────────────────────────────── */
+.rv-paginator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── Botón danger ───────────────────────────────────────────────────── */
+.rv-btn-danger {
+  color: #f87171 !important;
+  border-color: rgba(248,113,113,0.25) !important;
+}
+
+.rv-btn-danger:hover {
+  background: rgba(248,113,113,0.1) !important;
+  color: #fca5a5 !important;
+}
+
+/* ── Responsive nav ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .rv-nav {
+    gap: 0.4rem;
+  }
+  .rv-nav-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  .rv-nav-label {
+    font-size: 0.78rem;
+  }
+  .rv-section-title {
+    font-size: 1.1rem;
+  }
+  .rv-filtros {
+    flex-direction: column;
+  }
+  .rv-input-wide {
+    min-width: 100%;
+  }
+}
+
