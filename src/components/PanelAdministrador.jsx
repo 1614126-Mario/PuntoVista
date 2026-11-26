@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import ReportesVentas from './ReportesVentas'
 import {
   DollarSign,
   TrendingUp,
@@ -22,11 +23,13 @@ import {
 export default function PanelAdministrador({
   ventas = [],
   products = [],
+  token = null,
   onVerFactura,
   onVerCatalogo
 }) {
   const [filtroPeriodo, setFiltroPeriodo] = useState('todos') // 'todos' | 'hoy' | 'semana'
   const [searchQuery, setSearchQuery] = useState('')
+  const [vistaReportes, setVistaReportes] = useState(false)
 
   // Filtrado de ventas por período
   const ventasFiltradas = useMemo(() => {
@@ -130,30 +133,48 @@ export default function PanelAdministrador({
         </div>
 
         <div className="admin-periodo-selector">
+          {/* Botón Reportes */}
           <button
             type="button"
-            className={`btn-periodo ${filtroPeriodo === 'todos' ? 'active' : ''}`}
-            onClick={() => setFiltroPeriodo('todos')}
+            className={`btn-periodo ${vistaReportes ? 'active' : ''}`}
+            onClick={() => setVistaReportes(r => !r)}
+            title="Ver reportes de ventas y ganancias"
           >
-            Histórico Total
+            📊 Reportes
           </button>
-          <button
-            type="button"
-            className={`btn-periodo ${filtroPeriodo === 'semana' ? 'active' : ''}`}
-            onClick={() => setFiltroPeriodo('semana')}
-          >
-            Últimos 7 Días
-          </button>
-          <button
-            type="button"
-            className={`btn-periodo ${filtroPeriodo === 'hoy' ? 'active' : ''}`}
-            onClick={() => setFiltroPeriodo('hoy')}
-          >
-            Hoy
-          </button>
+          {!vistaReportes && (
+            <>
+              <button
+                type="button"
+                className={`btn-periodo ${filtroPeriodo === 'todos' ? 'active' : ''}`}
+                onClick={() => setFiltroPeriodo('todos')}
+              >
+                Histórico Total
+              </button>
+              <button
+                type="button"
+                className={`btn-periodo ${filtroPeriodo === 'semana' ? 'active' : ''}`}
+                onClick={() => setFiltroPeriodo('semana')}
+              >
+                Últimos 7 Días
+              </button>
+              <button
+                type="button"
+                className={`btn-periodo ${filtroPeriodo === 'hoy' ? 'active' : ''}`}
+                onClick={() => setFiltroPeriodo('hoy')}
+              >
+                Hoy
+              </button>
+            </>
+          )}
         </div>
       </div>
 
+      {/* Vista Reportes */}
+      {vistaReportes ? (
+        <ReportesVentas token={token} ventas={ventas} />
+      ) : (
+      <>
       {/* METRICAS PRINCIPALES: INGRESOS, GANANCIA ESTIMADA, INVENTARIO Y POR COBRAR */}
       <div className="admin-kpi-grid">
         {/* KPI 1: Ingresos Totales */}
@@ -471,6 +492,8 @@ export default function PanelAdministrador({
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

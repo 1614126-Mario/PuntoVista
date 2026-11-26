@@ -29,7 +29,8 @@ import {
   ChevronRight,
   ShoppingCart,
   ChefHat,
-  Flame
+  Flame,
+  BarChart3
 } from 'lucide-react'
 import { INITIAL_PRODUCTS } from './data/initialProducts'
 import { PAYMENT_LABELS } from './data/paymentInfo'
@@ -48,6 +49,7 @@ import PanelAdministrador from './components/PanelAdministrador'
 import PanelMesero from './components/PanelMesero'
 import TablaUsuarios from './components/TablaUsuarios'
 import PantallaCocina from './components/PantallaCocina'
+import ReportesVentas from './components/ReportesVentas'
 import Boton from './components/Boton'
 import ConfirmModal from './components/ConfirmModal'
 import './App.css'
@@ -785,6 +787,15 @@ export default function App() {
                   <Users size={16} />
                   <span>Usuarios</span>
                 </button>
+
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'reportes' ? 'active' : ''}`}
+                  onClick={() => setActiveView('reportes')}
+                >
+                  <BarChart3 size={16} />
+                  <span>Reportes & Ganancias</span>
+                </button>
               </>
             )}
 
@@ -843,6 +854,14 @@ export default function App() {
                 >
                   <ChefHat size={16} />
                   <span>Cocina (KDS)</span>
+                </button>
+                <button
+                  type="button"
+                  className={`nav-tab-btn ${activeView === 'reportes' ? 'active' : ''}`}
+                  onClick={() => setActiveView('reportes')}
+                >
+                  <BarChart3 size={16} />
+                  <span>Reportes & Ganancias</span>
                 </button>
               </>
             )}
@@ -1035,9 +1054,10 @@ export default function App() {
                           className="product-img"
                           loading="lazy"
                           onError={(e) => {
-                            e.target.src = isFood
+                            e.currentTarget.onerror = null
+                            e.currentTarget.src = isFood
                               ? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'
-                              : 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80'
+                              : 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=600&q=80'
                           }}
                         />
 
@@ -1604,8 +1624,16 @@ export default function App() {
         <PanelAdministrador
           ventas={ventas}
           products={products}
+          token={authService.getToken()}
           onVerFactura={handleVerFactura}
           onVerCatalogo={() => setActiveView('pos')}
+        />
+      )}
+
+      {activeView === 'reportes' && (
+        <ReportesVentas
+          token={authService.getToken()}
+          ventas={ventas}
         />
       )}
 

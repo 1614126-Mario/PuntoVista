@@ -215,20 +215,28 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     }
   }, [clienteActivo])
 
+  const [subCategory, setSubCategory] = useState('all')
   const [displayCount, setDisplayCount] = useState(48)
 
   useEffect(() => {
     setDisplayCount(48)
-  }, [category, query])
+  }, [category, subCategory, query])
 
   const productos = useMemo(() => {
     const q = query.toLowerCase().trim()
     return INITIAL_PRODUCTS.filter((p) => {
       const okCat = category === 'all' || p.category === category
-      const okQuery = !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
-      return okCat && okQuery
+      const n = p.name.toLowerCase()
+      let okSub = true
+      if (subCategory === 'hamburguesas') okSub = n.includes('hamburguesa') || n.includes('burger') || n.includes('slider')
+      else if (subCategory === 'pupusas') okSub = n.includes('pupusa')
+      else if (subCategory === 'tacos') okSub = n.includes('taco') || n.includes('flauta')
+      else if (subCategory === 'papitas') okSub = n.includes('papita') || n.includes('salchipapa')
+      else if (subCategory === 'maruchan') okSub = n.includes('maruchan')
+      const okQuery = !q || n.includes(q) || p.description.toLowerCase().includes(q)
+      return okCat && okSub && okQuery
     })
-  }, [category, query])
+  }, [category, subCategory, query])
 
   const visibleProductos = useMemo(() => {
     return productos.slice(0, displayCount)
@@ -724,13 +732,42 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                     key={key}
                     type="button"
                     className={`shop-tab ${category === key ? 'active' : ''}`}
-                    onClick={() => setCategory(key)}
+                    onClick={() => {
+                      setCategory(key)
+                      if (key === 'bebida') setSubCategory('all')
+                    }}
                   >
                     {label}
                   </button>
                 ))}
               </div>
             </div>
+
+            {category !== 'bebida' && (
+              <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                {[
+                  ['all', '🍽️ Todas las Comidas'],
+                  ['hamburguesas', '🍔 Hamburguesas'],
+                  ['pupusas', '🫓 Pupusas (Chicharrón, Queso, Jalapeño)'],
+                  ['tacos', '🌮 Tacos Variados'],
+                  ['papitas', '🍟 Papitas y Salchipapas'],
+                  ['maruchan', '🍜 Maruchan con Elote']
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`shop-tab ${subCategory === key ? 'active' : ''}`}
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
+                    onClick={() => {
+                      setCategory(key === 'all' ? category : 'comida')
+                      setSubCategory(key)
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="shop-results-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0.5rem 0 1rem', fontSize: '0.85rem', color: '#9ca3af' }}>
               <span>Mostrando {Math.min(displayCount, productos.length)} de {productos.length.toLocaleString()} platillos y bebidas</span>
@@ -748,7 +785,17 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                   {visibleProductos.map((p) => (
                     <article className="shop-card" key={p.id}>
                       <div className="shop-card-img">
-                        <img src={p.image} alt={p.name} loading="lazy" />
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null
+                            e.currentTarget.src = p.category === 'bebida'
+                              ? 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=600&q=80'
+                              : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'
+                          }}
+                        />
                         {p.tag && <span className="shop-tag">{p.tag}</span>}
                       </div>
                       <div className="shop-card-body">
