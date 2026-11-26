@@ -787,15 +787,6 @@ export default function App() {
                   <Users size={16} />
                   <span>Usuarios</span>
                 </button>
-
-                <button
-                  type="button"
-                  className={`nav-tab-btn ${activeView === 'reportes' ? 'active' : ''}`}
-                  onClick={() => setActiveView('reportes')}
-                >
-                  <BarChart3 size={16} />
-                  <span>Reportes & Ganancias</span>
-                </button>
               </>
             )}
 
@@ -1620,7 +1611,7 @@ export default function App() {
       {/* ========================================================= */}
       {/* VISTA 3: PANEL ADMINISTRADOR: FINANZAS, GANANCIA Y PRODUCTOS */}
       {/* ========================================================= */}
-      {activeView === 'admin' && (
+      {activeView === 'admin' && currentUser?.role === 'admin' && (
         <PanelAdministrador
           ventas={ventas}
           products={products}
@@ -1630,10 +1621,11 @@ export default function App() {
         />
       )}
 
-      {activeView === 'reportes' && (
+      {activeView === 'reportes' && currentUser?.role === 'admin' && (
         <ReportesVentas
           token={authService.getToken()}
           ventas={ventas}
+          products={products}
         />
       )}
 

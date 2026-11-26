@@ -6,9 +6,14 @@ Regenera initialProducts.js:
   * Hamburguesas (listado amplio de estilos y sabores)
   * Tacos (diferentes sabores: asada, pastor, birria, carnitas, chorizo, pollo, camarón, pescado, etc.)
   * Papitas fritas, Salchipapas, Maruchan con elote, Comidas típicas y Bebidas
-- Imágenes verificadas (HTTP 200) y acordes a cada tipo de comida.
+- Imágenes reales verificadas (TheMealDB + TheCocktailDB + Unsplash) asignadas por
+  categoría exacta y en orden secuencial sin repetir en los listados principales.
 """
+import json
 import random
+
+with open(r"c:\introReact\PuntoVenta1\vistas\src\data\fetched_images.json", "r", encoding="utf-8") as f:
+    FETCHED = json.load(f)
 
 PRODUCTOS_BASE = [
     # ── PUPUSAS (Chicharrón, Queso, Jalapeño y especialidades) ──────────
@@ -130,88 +135,117 @@ PRODUCTOS_BASE = [
     ("Refresco de Marañón", "bebida", 1.75, "Jugo de marañón salvadoreño ligeramente endulzado.", "Regional"),
 ]
 
-# =====================================================================
-# IMÁGENES VERIFICADAS HTTP 200 POR CATEGORÍA DE PLATILLO
-# =====================================================================
-BURGER_IMGS = [
-    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=600&q=80",
-]
-TACO_IMGS = [
-    "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=600&q=80",
-]
-FRIES_IMGS = [
-    "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1518013431117-eb1465fa5752?auto=format&fit=crop&w=600&q=80",
-]
-RAMEN_IMGS = [
-    "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=600&q=80",
-]
-PIZZA_IMGS = [
-    "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80",
-]
-WINGS_IMGS = [
-    "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
-]
-SUSHI_IMGS = [
-    "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80",
-]
-HOTDOG_IMGS = [
-    "https://images.unsplash.com/photo-1612392062631-94dd858cba88?auto=format&fit=crop&w=600&q=80",
-]
-GENERAL_FOOD_IMGS = [
-    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1534482421-64566f976cfa?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=600&q=80",
-]
-DRINK_IMGS = [
-    "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1437418747212-8d9709afab22?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1570197571499-166b36435e9f?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1512428813834-c702c7702b78?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=600&q=80",
-]
+# Construir pools amplios sin repeticiones por cada categoría
+def urls_for(key, extra):
+    base = [u for _, u in FETCHED.get(key, [])]
+    seen = set(base)
+    for u in extra:
+        if u not in seen:
+            seen.add(u)
+            base.append(u)
+    return base
+
+POOLS = {
+    "burger": urls_for("hamburguesa", [
+        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "tacos": urls_for("tacos", [
+        "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "pupusas": ["pupusasImg"] + urls_for("pupusas", [
+        "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "fries": urls_for("papitas", [
+        "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1518013431117-eb1465fa5752?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "ramen": urls_for("maruchan", [
+        "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "pizza": urls_for("pizza", [
+        "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "wings": urls_for("alitas", [
+        "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "sushi": urls_for("sushi", [
+        "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "hotdog": [
+        "https://images.unsplash.com/photo-1612392062631-94dd858cba88?auto=format&fit=crop&w=600&q=80",
+    ],
+    "burrito": urls_for("burrito", [
+        "https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "general": [
+        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1534482421-64566f976cfa?auto=format&fit=crop&w=600&q=80",
+    ],
+    "drink_cafe": urls_for("bebida_cafe", [
+        "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=600&q=80",
+    ]),
+    "drink_fria": urls_for("bebida_fria", [
+        "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1437418747212-8d9709afab22?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1570197571499-166b36435e9f?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1512428813834-c702c7702b78?auto=format&fit=crop&w=600&q=80",
+    ]),
+}
+
+POOL_CURSORS = {k: 0 for k in POOLS}
 
 def pick_image(name, cat):
     n = name.lower()
     if cat == "bebida":
-        return f'"{random.choice(DRINK_IMGS)}"'
-    if "pupusa" in n:
+        key = "drink_cafe" if any(w in n for w in ["café", "cafe", "frappé", "frappe", "espresso", "malteada"]) else "drink_fria"
+    elif "pupusa" in n:
+        key = "pupusas"
+    elif "hamburguesa" in n or "burger" in n or "slider" in n:
+        key = "burger"
+    elif "taco" in n or "flauta" in n:
+        key = "tacos"
+    elif "papita" in n or "salchipapa" in n:
+        key = "fries"
+    elif "maruchan" in n or "ramen" in n:
+        key = "ramen"
+    elif "pizza" in n:
+        key = "pizza"
+    elif "alita" in n:
+        key = "wings"
+    elif "sushi" in n:
+        key = "sushi"
+    elif "hot dog" in n:
+        key = "hotdog"
+    elif "burrito" in n or "quesadilla" in n or "nacho" in n or "enchilada" in n:
+        key = "burrito"
+    else:
+        key = "general"
+
+    pool = POOLS[key]
+    idx = POOL_CURSORS[key]
+    POOL_CURSORS[key] = idx + 1
+    chosen = pool[idx % len(pool)]
+    if chosen == "pupusasImg":
         return "pupusasImg"
-    if "hamburguesa" in n or "burger" in n or "slider" in n:
-        return f'"{random.choice(BURGER_IMGS)}"'
-    if "taco" in n or "flauta" in n:
-        return f'"{random.choice(TACO_IMGS)}"'
-    if "papita" in n or "salchipapa" in n:
-        return f'"{random.choice(FRIES_IMGS)}"'
-    if "maruchan" in n or "ramen" in n:
-        return f'"{random.choice(RAMEN_IMGS)}"'
-    if "pizza" in n:
-        return f'"{random.choice(PIZZA_IMGS)}"'
-    if "alita" in n:
-        return f'"{random.choice(WINGS_IMGS)}"'
-    if "sushi" in n:
-        return f'"{random.choice(SUSHI_IMGS)}"'
-    if "hot dog" in n:
-        return f'"{random.choice(HOTDOG_IMGS)}"'
-    return f'"{random.choice(GENERAL_FOOD_IMGS)}"'
+    return f'"{chosen}"'
 
 ESTILOS_COMIDA = [
     "Artesanal", "Casera", "Gourmet", "Express", "Familiar", "Tradicional",
@@ -332,4 +366,5 @@ out_path = r"c:\introReact\PuntoVenta1\vistas\src\data\initialProducts.js"
 with open(out_path, "w", encoding="utf-8") as f:
     f.writelines(out_lines)
 
-print(f"Generados: {len(products)} productos únicos | 0 duplicados")
+print(f"Generados: {len(products)} productos únicos")
+print("Tamanos de pools:", {k: len(v) for k, v in POOLS.items()})

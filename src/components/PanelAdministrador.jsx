@@ -172,7 +172,7 @@ export default function PanelAdministrador({
 
       {/* Vista Reportes */}
       {vistaReportes ? (
-        <ReportesVentas token={token} ventas={ventas} />
+        <ReportesVentas token={token} ventas={ventas} products={products} />
       ) : (
       <>
       {/* METRICAS PRINCIPALES: INGRESOS, GANANCIA ESTIMADA, INVENTARIO Y POR COBRAR */}
