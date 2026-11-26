@@ -96,12 +96,22 @@ GRUPOS_BASE = {
         ("Fettuccine Carbonara Tradicional", "comida", 7.75, "Pasta al dente con salsa cremosa de huevo, queso pecorino y tocino crujiente.", "Gourmet"),
     ],
     "carnes_pollo": [
+        ("Churrasco Argentino con Chimichurri", "comida", 11.50, "Corte de res a la parrilla acompañado de chimichurri, casamiento y papas.", "Gourmet"),
+        ("Carne Asada Salvadoreña con Chirmol", "comida", 8.95, "Carne de res marinada a las brasas con casamiento, queso fresco, chirmol y tortillas.", "Salvadoreño"),
+        ("Costillas de Cerdo en Salsa BBQ", "comida", 10.95, "Medio rack de costillas horneadas a fuego lento con elote asado y papas.", "Chef"),
+        ("Bistec Encebollado Casero", "comida", 7.95, "Suave bistec de res salteado con aros de cebolla caramelizada, arroz y ensalada.", "Tradicional"),
+        ("Lomo Saltado Estilo Peruano", "comida", 9.50, "Tiras de lomo de res al wok con tomate, cebolla morada, salsa de soya y papas fritas.", "Fusion"),
+        ("Filete Mignon a la Parrilla", "comida", 13.50, "Medallón tierno de lomito en reducción de champiñones y puré de papas.", "Gourmet"),
+        ("Chuletas de Cerdo Ahumadas (2 pzas)", "comida", 8.50, "Chuletas jugosas a la plancha glaseadas en miel y mostaza con vegetales.", "Especial"),
+        ("Arrachera Norteña a las Brasas", "comida", 10.50, "Corte marinado servido con guacamole, cebollines asados y tortillas calientes.", "Popular"),
+        ("Milanesa de Res Empanizada", "comida", 7.75, "Crujiente milanesa dorada acompañada de papas fritas y ensalada fresca.", "Clásico"),
+        ("Brochetas Mixtas de Res y Pollo", "comida", 8.75, "Pinchos a la parrilla con pimientos, cebolla morada y arroz primavera.", "Especial"),
         ("Alitas Glaseadas BBQ (8 pzas)", "comida", 6.75, "8 piezas crujientes en salsa BBQ dulce, papas rústicas y aderezo ranch.", "Especial"),
         ("Alitas Buffalo Picantes (8 pzas)", "comida", 6.75, "Alitas bañadas en salsa buffalo clásica con apio y aderezo blue cheese.", "Picante"),
         ("Alitas Mango Habanero (8 pzas)", "comida", 7.00, "Balance dulce y picante con glaseado artesanal de mango y chile habanero.", "Especial"),
         ("Pollo Frito Crujiente (3 pzas con Papas)", "comida", 5.95, "Tres piezas de pollo dorado crujiente con papas fritas, ensalada y pan.", "Popular"),
-        ("Churrasco Argentino con Chimichurri", "comida", 11.50, "Corte de res a la parrilla acompañado de chimichurri, casamiento y papas.", "Gourmet"),
-        ("Costillas de Cerdo en Salsa BBQ", "comida", 10.95, "Medio rack de costillas horneadas a fuego lento con elote asado y papas.", "Chef"),
+        ("Pechuga Cordon Bleu Gratinada", "comida", 8.25, "Pechuga rellena de jamón y queso suizo en salsa cremosa de champiñones.", "Chef"),
+        ("Pollo Asado al Carbón (1/2 Pollo)", "comida", 7.50, "Medio pollo marinado con especias a las brasas, tortillas, chirmol y ensalada.", "Popular"),
         ("Fajitas Mixtas de Res y Pollo", "comida", 8.50, "Tiras de res y pollo salteadas con pimientos y cebolla, tortillas y guacamole.", "Popular"),
         ("Pechuga a la Plancha con Ensalada", "comida", 6.50, "Pechuga marinada a las finas hierbas con arroz primavera y ensalada fresca.", "Saludable"),
     ],
@@ -208,7 +218,7 @@ POOLS = {
     "wings": urls_for("alitas", [
         "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
     ]),
-    "meat": [u for _, u in MEALS_ALL.get("Beef", [])[:30]] + [u for _, u in MEALS_ALL.get("Chicken", [])[:30]] + [u for _, u in MEALS_ALL.get("Pork", [])[:20]],
+    "meat": [u for _, u in MEALS_ALL.get("Beef", [])] + [u for _, u in MEALS_ALL.get("Chicken", [])] + [u for _, u in MEALS_ALL.get("Pork", [])] + [u for _, u in MEALS_ALL.get("Lamb", [])],
     "seafood": [u for _, u in MEALS_ALL.get("Seafood", [])],
     "dessert": [u for _, u in MEALS_ALL.get("Dessert", [])[:40]] + [u for _, u in MEALS_ALL.get("Breakfast", [])],
     "sushi": urls_for("sushi", [
@@ -265,7 +275,7 @@ def pick_image(name, cat, fixed_img=None):
         key = "wings"
     elif "camar" in n or "pescado" in n or "mojarra" in n or "ceviche" in n:
         key = "seafood"
-    elif "churrasco" in n or "costilla" in n or "fajita" in n or "pollo" in n or "pechuga" in n:
+    elif any(w in n for w in ["churrasco", "costilla", "fajita", "pollo", "pechuga", "carne", "bistec", "lomo", "filete", "chuleta", "arrachera", "milanesa", "brocheta"]):
         key = "meat"
     elif "sushi" in n:
         key = "sushi"

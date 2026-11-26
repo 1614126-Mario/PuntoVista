@@ -458,26 +458,40 @@ export default function App() {
     showToast(`Nuevo producto "${itemToAdd.name}" agregado con éxito`, 'success')
   }
 
+  const [subCategory, setSubCategory] = useState('all')
+
   // --- FILTROS Y BÚSQUEDA ---
   const filteredProducts = useMemo(() => {
     return products.filter((item) => {
       const matchesCategory =
         activeCategory === 'all' || item.category === activeCategory
+      const n = item.name.toLowerCase()
+      let matchesSub = true
+      if (subCategory === 'hamburguesas') matchesSub = n.includes('hamburguesa') || n.includes('burger') || n.includes('slider')
+      else if (subCategory === 'pupusas') matchesSub = n.includes('pupusa')
+      else if (subCategory === 'tacos') matchesSub = n.includes('taco') || n.includes('flauta')
+      else if (subCategory === 'papitas') matchesSub = n.includes('papita') || n.includes('salchipapa')
+      else if (subCategory === 'maruchan') matchesSub = n.includes('maruchan') || n.includes('ramen')
+      else if (subCategory === 'pizzas') matchesSub = n.includes('pizza') || n.includes('lasaña') || n.includes('espagueti') || n.includes('fettuccine') || n.includes('pasta')
+      else if (subCategory === 'carnes') matchesSub = ['alita', 'pollo', 'churrasco', 'costilla', 'fajita', 'res', 'cerdo', 'cordero', 'bistec', 'lomo', 'filete', 'chuleta', 'arrachera', 'milanesa', 'brocheta', 'carne'].some(w => n.includes(w))
+      else if (subCategory === 'mariscos') matchesSub = ['camar', 'pescado', 'mojarra', 'ceviche', 'mariscos', 'mar'].some(w => n.includes(w))
+      else if (subCategory === 'postres') matchesSub = ['pastel', 'cheesecake', 'brownie', 'pancake', 'empanada', 'desayuno', 'postre'].some(w => n.includes(w))
+
       const query = searchQuery.toLowerCase().trim()
       const matchesSearch =
         !query ||
-        item.name.toLowerCase().includes(query) ||
+        n.includes(query) ||
         item.description.toLowerCase().includes(query)
-      return matchesCategory && matchesSearch
+      return matchesCategory && matchesSub && matchesSearch
     })
-  }, [products, activeCategory, searchQuery])
+  }, [products, activeCategory, subCategory, searchQuery])
 
   // Paginación progresiva para rendimiento con 4,000 productos
   const [displayCount, setDisplayCount] = useState(48)
 
   useEffect(() => {
     setDisplayCount(48)
-  }, [activeCategory, searchQuery])
+  }, [activeCategory, subCategory, searchQuery])
 
   const displayedProducts = useMemo(() => {
     return filteredProducts.slice(0, displayCount)
@@ -995,13 +1009,46 @@ export default function App() {
 
                   <button
                     className={`tab-btn ${activeCategory === 'bebida' ? 'active' : ''}`}
-                    onClick={() => setActiveCategory('bebida')}
+                    onClick={() => {
+                      setActiveCategory('bebida')
+                      setSubCategory('all')
+                    }}
                   >
                     <CupSoda size={16} />
                     <span>Bebidas</span>
                     <span className="tab-count">{totalDrinks}</span>
                   </button>
                 </div>
+
+                {activeCategory !== 'bebida' && (
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', width: '100%', marginTop: '0.5rem' }}>
+                    {[
+                      ['all', '🍽️ Todas'],
+                      ['carnes', '🥩 Carnes y Pollo'],
+                      ['hamburguesas', '🍔 Hamburguesas'],
+                      ['pupusas', '🫓 Pupusas'],
+                      ['tacos', '🌮 Tacos'],
+                      ['papitas', '🍟 Papitas/Salchipapas'],
+                      ['maruchan', '🍜 Maruchan'],
+                      ['pizzas', '🍕 Pizzas/Pastas'],
+                      ['mariscos', '🦐 Mariscos'],
+                      ['postres', '🍰 Postres/Desayunos']
+                    ].map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`tab-btn ${subCategory === key ? 'active' : ''}`}
+                        style={{ fontSize: '0.78rem', padding: '0.35rem 0.7rem' }}
+                        onClick={() => {
+                          setActiveCategory(key === 'all' ? activeCategory : 'comida')
+                          setSubCategory(key)
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="results-info">
                   Mostrando {Math.min(displayCount, filteredProducts.length)} de {filteredProducts.length.toLocaleString()} producto(s)

@@ -234,7 +234,7 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
       else if (subCategory === 'papitas') okSub = n.includes('papita') || n.includes('salchipapa')
       else if (subCategory === 'maruchan') okSub = n.includes('maruchan') || n.includes('ramen')
       else if (subCategory === 'pizzas') okSub = n.includes('pizza') || n.includes('lasaña') || n.includes('espagueti') || n.includes('fettuccine') || n.includes('pasta')
-      else if (subCategory === 'carnes') okSub = n.includes('alita') || n.includes('pollo') || n.includes('churrasco') || n.includes('costilla') || n.includes('fajita') || n.includes('res') || n.includes('cerdo') || n.includes('cordero')
+      else if (subCategory === 'carnes') okSub = ['alita', 'pollo', 'churrasco', 'costilla', 'fajita', 'res', 'cerdo', 'cordero', 'bistec', 'lomo', 'filete', 'chuleta', 'arrachera', 'milanesa', 'brocheta', 'carne'].some(w => n.includes(w))
       else if (subCategory === 'mariscos') okSub = n.includes('camar') || n.includes('pescado') || n.includes('mojarra') || n.includes('ceviche') || n.includes('mariscos') || n.includes('mar')
       else if (subCategory === 'postres') okSub = n.includes('pastel') || n.includes('cheesecake') || n.includes('brownie') || n.includes('pancake') || n.includes('empanada') || n.includes('desayuno') || n.includes('postre')
       const okQuery = !q || n.includes(q) || p.description.toLowerCase().includes(q)
