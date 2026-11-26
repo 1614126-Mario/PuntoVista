@@ -272,13 +272,28 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
     setTimeout(() => setToast(''), 2500)
   }
 
+  const [masaPupusa, setMasaPupusa] = useState({})
+
   const agregar = (p) => {
+    const isPupusa = p.name.toLowerCase().includes('pupusa')
+    let itemToAdd = p
+    if (isPupusa) {
+      const defaultMasa = p.name.toLowerCase().includes('arroz') ? 'Arroz' : 'Maíz'
+      const masaElegida = masaPupusa[p.id] || defaultMasa
+      const yaDiceMasa = p.name.toLowerCase().includes('masa de ')
+      const finalName = yaDiceMasa ? p.name : `${p.name} — Masa de ${masaElegida}`
+      itemToAdd = {
+        ...p,
+        id: `${p.id}_${masaElegida.toLowerCase()}`,
+        name: finalName
+      }
+    }
     setCart((prev) => {
-      const ex = prev.find((i) => i.id === p.id)
-      if (ex) return prev.map((i) => (i.id === p.id ? { ...i, quantity: Math.min(i.quantity + 1, 50) } : i))
-      return [...prev, { ...p, quantity: 1 }]
+      const ex = prev.find((i) => i.id === itemToAdd.id)
+      if (ex) return prev.map((i) => (i.id === itemToAdd.id ? { ...i, quantity: Math.min(i.quantity + 1, 50) } : i))
+      return [...prev, { ...itemToAdd, quantity: 1 }]
     })
-    mostrarToast(`"${p.name}" agregado a tu pedido`)
+    mostrarToast(`"${itemToAdd.name}" agregado a tu pedido`)
   }
 
   const cambiarCantidad = (id, delta) => {
@@ -809,6 +824,34 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                       <div className="shop-card-body">
                         <h3>{p.name}</h3>
                         <p>{p.description}</p>
+                        {p.name.toLowerCase().includes('pupusa') && (
+                          <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '0.6rem', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: 600 }}>Masa:</span>
+                            {['Maíz', 'Arroz'].map((m) => {
+                              const defaultM = p.name.toLowerCase().includes('arroz') ? 'Arroz' : 'Maíz'
+                              const active = (masaPupusa[p.id] || defaultM) === m
+                              return (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => setMasaPupusa((prev) => ({ ...prev, [p.id]: m }))}
+                                  style={{
+                                    fontSize: '0.72rem',
+                                    padding: '0.2rem 0.55rem',
+                                    borderRadius: '999px',
+                                    border: active ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.16)',
+                                    background: active ? 'rgba(168, 85, 247, 0.35)' : 'rgba(255,255,255,0.05)',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontWeight: active ? 700 : 500
+                                  }}
+                                >
+                                  {m === 'Maíz' ? '🌽 Maíz' : '🌾 Arroz'}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
                         <div className="shop-card-foot">
                           <strong>{money(p.price)}</strong>
                           <button type="button" className="shop-btn-primary" onClick={() => agregar(p)} title="Comprar y agregar al pedido">
