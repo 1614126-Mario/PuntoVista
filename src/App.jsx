@@ -1662,7 +1662,6 @@ export default function App() {
         <PanelAdministrador
           ventas={ventas}
           products={products}
-          token={authService.getToken()}
           onVerFactura={handleVerFactura}
           onVerCatalogo={() => setActiveView('pos')}
         />
@@ -1670,7 +1669,6 @@ export default function App() {
 
       {activeView === 'reportes' && currentUser?.role === 'admin' && (
         <ReportesVentas
-          token={authService.getToken()}
           ventas={ventas}
           products={products}
         />

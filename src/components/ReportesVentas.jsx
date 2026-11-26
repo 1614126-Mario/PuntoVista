@@ -93,16 +93,12 @@ export default function ReportesVentas({ token, ventas: ventasProp = [], product
   }, [movimientos])
 
   useEffect(() => {
-    if (!token) {
-      setVentasApi(null)
-      setLoading(false)
-      return
-    }
     let cancelled = false
     setLoading(true)
-    fetch(`${API_BASE}/api/ventas`, {
+    const apiBase = import.meta.env.VITE_API_URL || API_BASE
+    fetch(`${apiBase}/api/ventas`, {
+      credentials: 'include',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
