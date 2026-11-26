@@ -232,7 +232,11 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
       else if (subCategory === 'pupusas') okSub = n.includes('pupusa')
       else if (subCategory === 'tacos') okSub = n.includes('taco') || n.includes('flauta')
       else if (subCategory === 'papitas') okSub = n.includes('papita') || n.includes('salchipapa')
-      else if (subCategory === 'maruchan') okSub = n.includes('maruchan')
+      else if (subCategory === 'maruchan') okSub = n.includes('maruchan') || n.includes('ramen')
+      else if (subCategory === 'pizzas') okSub = n.includes('pizza') || n.includes('lasaña') || n.includes('espagueti') || n.includes('fettuccine') || n.includes('pasta')
+      else if (subCategory === 'carnes') okSub = n.includes('alita') || n.includes('pollo') || n.includes('churrasco') || n.includes('costilla') || n.includes('fajita') || n.includes('res') || n.includes('cerdo') || n.includes('cordero')
+      else if (subCategory === 'mariscos') okSub = n.includes('camar') || n.includes('pescado') || n.includes('mojarra') || n.includes('ceviche') || n.includes('mariscos') || n.includes('mar')
+      else if (subCategory === 'postres') okSub = n.includes('pastel') || n.includes('cheesecake') || n.includes('brownie') || n.includes('pancake') || n.includes('empanada') || n.includes('desayuno') || n.includes('postre')
       const okQuery = !q || n.includes(q) || p.description.toLowerCase().includes(q)
       return okCat && okSub && okQuery
     })
@@ -751,7 +755,11 @@ export default function TiendaEnLinea({ onAccesoPersonal }) {
                   ['pupusas', '🫓 Pupusas (Chicharrón, Queso, Jalapeño)'],
                   ['tacos', '🌮 Tacos Variados'],
                   ['papitas', '🍟 Papitas y Salchipapas'],
-                  ['maruchan', '🍜 Maruchan con Elote']
+                  ['maruchan', '🍜 Maruchan con Elote'],
+                  ['pizzas', '🍕 Pizzas y Pastas'],
+                  ['carnes', '🍗 Carnes y Pollo'],
+                  ['mariscos', '🦐 Mariscos'],
+                  ['postres', '🍰 Postres y Desayunos']
                 ].map(([key, label]) => (
                   <button
                     key={key}
